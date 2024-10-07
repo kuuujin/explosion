@@ -4,13 +4,15 @@ import 'FindPW.dart'; // FindPw.dart 파일 import
 import 'Register.dart'; // Register.dart 파일 import
 
 class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Container(
           width: 300, // 원하는 너비 설정
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -22,7 +24,7 @@ class LoginScreen extends StatelessWidget {
               width: 276,
               height: 122, // 이미지 높이
               ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Image.asset(
                     'asset/images/보으링아이콘.png', // 이미지 경로
                     width: 219,
@@ -30,44 +32,44 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               // 아이디 입력 필드
-              TextField(
+              const TextField(
                 decoration: InputDecoration(
                   labelText: '아이디',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               // 비밀번호 입력 필드
-              TextField(
+              const TextField(
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: '비밀번호',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               // 로그인 버튼
               OutlinedButton(
                 onPressed: () {
                   // 로그인 처리
                 },
-                child: Text('로그인'),
                 style: OutlinedButton.styleFrom(
                   backgroundColor: Colors.white, // 배경색
-                  foregroundColor: Color(0xFFFC245A), // 텍스트 색상
+                  foregroundColor: const Color(0xFFFC245A), // 텍스트 색상
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10), // 코너 반경
-                    side: BorderSide(
+                    side: const BorderSide(
                       color: Color(0xFFFC245A), // 테두리 색상
                       width: 2, // 테두리 두께
                     ),
                   ),
-                  minimumSize: Size(230, 40), // 버튼 크기 설정
+                  minimumSize: const Size(230, 40), // 버튼 크기 설정
                 ),
+                child: Text('로그인'),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               // 하단 텍스트
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -80,7 +82,7 @@ class LoginScreen extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => FindID()), // FindID 화면으로 이동
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       '아이디 찾기',
                       style: TextStyle(fontSize: 11, color: Colors.black54),
                     ),
@@ -89,7 +91,7 @@ class LoginScreen extends StatelessWidget {
                     width: 1, // 선의 두께
                     height: 20, // 선의 높이
                     color: Colors.black54, // 선의 색상
-                    margin: EdgeInsets.symmetric(horizontal: 10), // 간격
+                    margin: const EdgeInsets.symmetric(horizontal: 10), // 간격
                   ),
                   GestureDetector(
                     onTap: () {
@@ -99,7 +101,7 @@ class LoginScreen extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => FindPw()), // FindPw 화면으로 이동
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       '비밀번호 재설정',
                       style: TextStyle(fontSize: 11, color: Colors.black54),
                     ),
@@ -108,7 +110,7 @@ class LoginScreen extends StatelessWidget {
                     width: 1, // 선의 두께
                     height: 20, // 선의 높이
                     color: Colors.black54, // 선의 색상
-                    margin: EdgeInsets.symmetric(horizontal: 10), // 간격
+                    margin: const EdgeInsets.symmetric(horizontal: 10), // 간격
                   ),
                   GestureDetector(
                     onTap: () {
@@ -118,26 +120,26 @@ class LoginScreen extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => Register()), // Register 화면으로 이동
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       '회원가입',
                       style: TextStyle(fontSize: 11, color: Colors.black54),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               // 카카오톡 로그인 버튼
-              Container(
+              SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
                     // 카카오톡 로그인 처리
                   },
-                  child: Text('카카오톡으로 로그인 하기'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.yellow, // 버튼 색상
                     foregroundColor: Colors.black, // 텍스트 색상
                   ),
+                  child: Text('카카오톡으로 로그인 하기'),
                 ),
               ),
             ],
