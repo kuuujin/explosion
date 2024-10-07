@@ -16,12 +16,19 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              '보으링',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
+            Image.asset(
+              'asset/images/보으링로고.png', // 이미지 경로
+              width: 276,
+              height: 122, // 이미지 높이
+              ),
             SizedBox(height: 20),
+            Image.asset(
+              'asset/images/보으링아이콘.png', // 이미지 경로
+              width: 219,
+              height: 205, // 이미지 높이
+              ),
           ],
+          
         ),
       ),
     );

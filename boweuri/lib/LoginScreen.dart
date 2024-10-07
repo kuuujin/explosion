@@ -17,18 +17,16 @@ class LoginScreen extends StatelessWidget {
               // 제목 및 이미지
               Column(
                 children: [
-                  Text(
-                    '보으링~',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
-                  ),
+                  Image.asset(
+              'asset/images/보으링로고.png', // 이미지 경로
+              width: 276,
+              height: 122, // 이미지 높이
+              ),
                   SizedBox(height: 10),
                   Image.asset(
-                    'assets/images/your_image.png', // 이미지 경로
-                    height: 100, // 이미지 높이
+                    'asset/images/보으링아이콘.png', // 이미지 경로
+                    width: 219,
+                    height: 205, // 이미지 높이
                   ),
                 ],
               ),
