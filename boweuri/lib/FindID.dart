@@ -163,12 +163,12 @@ class FindID extends StatefulWidget {
 class _FindIDState extends State<FindID> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _verificationController = TextEditingController();
-  bool _isPhoneButtonEnabled = false;
+  bool _isButtonEnabled = false;
   bool _isVerificationFieldVisible = false; // 인증 번호 입력 필드 가시성 상태
 
   void _checkPhoneNumber(String value) {
     setState(() {
-      _isPhoneButtonEnabled = value.length == 11; // 전화번호가 11자리인지 확인
+      _isButtonEnabled = value.length == 11; // 전화번호가 11자리인지 확인
     });
   }
 
@@ -265,26 +265,28 @@ class _FindIDState extends State<FindID> {
           },
         ),
       ),
-      body: SingleChildScrollView( // 추가된 부분
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            PhoneInputGroup(
-              controller: _phoneController,
-              onChanged: _checkPhoneNumber,
-              onRequest: _requestVerification,
-              isButtonEnabled: _isPhoneButtonEnabled,
-            ),
-            const SizedBox(height: 20), // 위젯 간격
-            if (_isVerificationFieldVisible) ...[
-              VerificationInputGroup(
-                controller: _verificationController,
-                onConfirm: _confirmVerification,
+      body: SingleChildScrollView( // 변경된 부분
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_isVerificationFieldVisible) ...[
+                VerificationInputGroup(
+                  controller: _verificationController,
+                  onConfirm: _confirmVerification, // 확인 콜백 추가
+                ),
+                Padding(padding: const EdgeInsets.only(top: 150)), // 위젯 간격
+              ],
+              PhoneInputGroup(
+                controller: _phoneController,
+                onChanged: _checkPhoneNumber,
+                onRequest: _requestVerification, // 요청 메서드 변경
+                isButtonEnabled: _isButtonEnabled,
               ),
             ],
-          ],
+          ),
         ),
       ),
     );

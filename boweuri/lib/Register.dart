@@ -148,6 +148,8 @@
 //   }
 // }
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Register extends StatefulWidget {
   @override
@@ -158,33 +160,85 @@ class _RegisterState extends State<Register> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _verificationController = TextEditingController();
   bool _isButtonEnabled = false;
-  bool _isVerificationFieldVisible = false; // 인증번호 입력 필드 가시성 상태
+  bool _isVerificationFieldVisible = false; // 두 번째 필드의 가시성 상태
 
   void _checkPhoneNumber(String value) {
     setState(() {
-      _isButtonEnabled = value.length == 11; // 전화번호 길이 체크
+      _isButtonEnabled = value.length == 11;
     });
   }
 
-  void _requestVerification() {
-    setState(() {
-      _isVerificationFieldVisible = true; // 인증번호 입력 필드 표시
-    });
+  Future<void> _requestVerification() async {
+    final phoneNumber = _phoneController.text;
+
+    // API 요청
+    try {
+      final response = await http.post(
+        Uri.parse('http://34.64.176.207:5000/sendsms'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'phone': phoneNumber}),  // 전화번호를 JSON 형식으로 전송
+      );
+
+      // 서버 응답 상태 코드에 관계없이 두 번째 필드 보이기
+      setState(() {
+        _isVerificationFieldVisible = true; // 인증번호 입력 필드 표시
+      });
+
+      // 서버 응답 처리 (선택 사항)
+      if (response.statusCode == 200) {
+        // 추가 로직 (예: 성공 메시지 등) 구현 가능
+      } else {
+        // 에러 처리 (예: 사용자에게 알림)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('인증 번호 요청 실패')),
+        );
+      }
+    } catch (e) {
+      // 예외 처리 (예: 네트워크 오류)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('네트워크 오류 발생')),
+      );
+    }
   }
 
-  void _confirmVerification() {
-    // 인증번호 확인 후 다음 화면으로 전환
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => AccountInfoScreen(phoneNumber: _phoneController.text)),
-    );
+  Future<void> _confirmVerification() async {
+    final phoneNumber = _phoneController.text;
+    final verificationCode = _verificationController.text;
+
+    // 서버에 인증 코드 확인 요청
+    try {
+      final response = await http.post(
+        Uri.parse('http://34.64.176.207:5000/verify'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'phone': phoneNumber, 'code': verificationCode}),  // 전화번호와 인증 코드를 JSON 형식으로 전송
+      );
+
+      // 서버 응답 상태 코드 처리
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        // 인증 성공 시 비밀번호 재설정 화면으로 이동
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AccountInfoScreen(phoneNumber: _phoneController.text)),
+        );
+      } else {
+        // 인증 실패 시 사용자에게 알림
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('인증 번호가 일치하지 않습니다.')),
+        );
+      }
+    } catch (e) {
+      // 예외 처리 (예: 네트워크 오류)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('네트워크 오류 발생')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('회원가입'),
+        title: Text('비밀번호 찾기'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -192,26 +246,28 @@ class _RegisterState extends State<Register> {
           },
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_isVerificationFieldVisible) ...[
-              VerificationInputGroup(
-                controller: _verificationController,
-                onConfirm: _confirmVerification, // 인증 확인 콜백 추가
+      body: SingleChildScrollView( // 변경된 부분
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_isVerificationFieldVisible) ...[
+                VerificationInputGroup(
+                  controller: _verificationController,
+                  onConfirm: _confirmVerification, // 확인 콜백 추가
+                ),
+                Padding(padding: const EdgeInsets.only(top: 150)), // 위젯 간격
+              ],
+              PhoneInputGroup(
+                controller: _phoneController,
+                onChanged: _checkPhoneNumber,
+                onRequest: _requestVerification, // 요청 메서드 변경
+                isButtonEnabled: _isButtonEnabled,
               ),
-              SizedBox(height: 20), // 위젯 간의 간격 조정
             ],
-            PhoneInputGroup(
-              controller: _phoneController,
-              onChanged: _checkPhoneNumber,
-              onRequest: _requestVerification,
-              isButtonEnabled: _isButtonEnabled,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -243,7 +299,7 @@ class PhoneInputGroup extends StatelessWidget {
         SizedBox(height: 10),
         TextField(
           controller: controller,
-          keyboardType: TextInputType.phone,
+          keyboardType: TextInputType.phone, // 숫자 키보드 설정
           maxLength: 11,
           decoration: InputDecoration(
             border: OutlineInputBorder(),
@@ -269,7 +325,7 @@ class PhoneInputGroup extends StatelessWidget {
 
 class VerificationInputGroup extends StatelessWidget {
   final TextEditingController controller;
-  final VoidCallback onConfirm;
+  final VoidCallback onConfirm; // 확인 버튼 콜백
 
   VerificationInputGroup({required this.controller, required this.onConfirm});
 
@@ -285,6 +341,7 @@ class VerificationInputGroup extends StatelessWidget {
         SizedBox(height: 10),
         TextField(
           controller: controller,
+          keyboardType: TextInputType.number, // 숫자 키보드 설정
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             hintText: '인증번호 입력',
@@ -357,7 +414,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
           },
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView( // SingleChildScrollView 추가
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
