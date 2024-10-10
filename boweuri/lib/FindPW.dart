@@ -420,7 +420,7 @@ class _FindPWState extends State<FindPW> {
             Navigator.pop(context); // 뒤로 가기
           },
         ),
-      ),
+      ),//
       body: SingleChildScrollView( // 변경된 부분
         child: Padding(
           padding: const EdgeInsets.all(16.0),
