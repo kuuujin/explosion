@@ -985,6 +985,8 @@
 //   );
 // }
 // }
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -1012,62 +1014,60 @@ class _RegisterState extends State<Register> {
     });
   }
 
-Future<void> _registerUser() async {
-  // 전화번호 중복 확인
-  final phoneNumber = phoneController.text;
+  Future<void> _registerUser() async {
+    final phoneNumber = phoneController.text;
 
-  // 전화번호가 이미 존재하는지 확인하는 API 호출
-  final checkResponse = await http.post(
-    Uri.parse('http://34.64.176.207:5000/check_phone'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'phone_num': phoneNumber}),
-  );
+    // 사용자 등록 로직
+    final response = await http.post(
+      Uri.parse('http://34.64.176.207:5000/users'), // Flask 서버 주소
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': nameController.text,
+        'phone_num': phoneNumber,
+        'login_id': loginIdController.text,
+        'pw': passwordController.text,
+        'email': emailController.text,
+        'birthdate': birthdateController.text,
+      }),
+    );
 
-  if (checkResponse.statusCode == 200) {
-    final exists = json.decode(checkResponse.body)['exists'];
-    if (exists) {
+    if (response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('해당 전화번호로 이미 계정이 존재합니다.')),
+        SnackBar(content: Text('사용자 등록 성공!')),
       );
-      return; // 중복된 번호가 있으면 함수 종료
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('사용자 등록 실패: ${json.decode(response.body)['error']}')),
+      );
     }
   }
 
-  // 사용자 등록 로직
-  final response = await http.post(
-    Uri.parse('http://34.64.176.207:5000/users'), // Flask 서버 주소
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'name': nameController.text,
-      'phone_num': phoneNumber,
-      'login_id': loginIdController.text,
-      'pw': passwordController.text,
-      'email': emailController.text,
-      'birthdate': birthdateController.text,
-    }),
-  );
-
-  if (response.statusCode == 201) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('사용자 등록 성공!')),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('사용자 등록 실패: ${json.decode(response.body)['error']}')),
-    );
-  }
-}
-
-
   Future<void> _requestVerification() async {
     final phoneNumber = phoneController.text;
+
+    // 전화번호 중복 확인
+    final checkResponse = await http.post(
+      Uri.parse('http://34.64.176.207:5000/check_phone'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone_num': phoneNumber}),
+    ).timeout(Duration(seconds: 15));
+
+    if (checkResponse.statusCode == 200) {
+      final exists = json.decode(checkResponse.body)['exists'];
+      if (exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('해당 전화번호로 이미 계정이 존재합니다.')),
+        );
+        return; // 중복된 번호가 있으면 함수 종료
+      }
+    }
 
     try {
       final response = await http.post(
         Uri.parse('http://34.64.176.207:5000/sendsms'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'phone': phoneNumber}),
-      );
+      ).timeout(Duration(seconds: 15));
 
       setState(() {
         _isVerificationFieldVisible = true;
@@ -1078,7 +1078,12 @@ Future<void> _registerUser() async {
           SnackBar(content: Text('인증 번호 요청 실패')),
         );
       }
-    } catch (e) {
+    } on TimeoutException catch (_) {
+    // 타임아웃 발생 시 처리
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('서버와 통신 실패.')),
+    );
+  } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('네트워크 오류 발생')),
       );
@@ -1097,16 +1102,17 @@ Future<void> _registerUser() async {
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        await _registerUser(); // 인증 후 사용자 등록
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => AccountInfoScreen(
               phoneNumber: phoneController.text,
-              onRegister: _registerUser, // onRegister 매개변수 추가
-              nameController: nameController, // 이름 컨트롤러 추가
-              loginIdController: loginIdController, // 아이디 컨트롤러 추가
-              passwordController: passwordController, // 비밀번호 컨트롤러 추가
-              emailController: emailController, // 이메일 컨트롤러 추가
+              onRegister: _registerUser,
+              nameController: nameController,
+              loginIdController: loginIdController,
+              passwordController: passwordController,
+              emailController: emailController,
             ),
           ),
         );
@@ -1121,6 +1127,7 @@ Future<void> _registerUser() async {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

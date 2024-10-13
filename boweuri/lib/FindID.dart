@@ -150,6 +150,8 @@
 // }
 
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -263,6 +265,11 @@ Future<void> _confirmVerification() async {
         const SnackBar(content: Text('인증 번호가 일치하지 않습니다.')),
       );
     }
+  }  on TimeoutException catch (_) {
+    // 타임아웃 발생 시 처리
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('서버와 통신 실패.')),
+    );
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('네트워크 오류 발생')),
