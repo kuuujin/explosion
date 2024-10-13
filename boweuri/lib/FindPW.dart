@@ -485,7 +485,12 @@ class PhoneInputGroup extends StatelessWidget {
         ),
         SizedBox(height: 20), // 위젯 내부의 간격
         ElevatedButton(
-          onPressed: isButtonEnabled ? onRequest : null,
+          onPressed: isButtonEnabled
+              ? () {
+                FocusScope.of(context).unfocus(); // 키보드 닫기
+                onRequest(); // 인증 번호 요청
+                }
+              : null,
           child: Text('인증 번호 요청'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,

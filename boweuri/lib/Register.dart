@@ -1126,7 +1126,7 @@ Future<void> _registerUser() async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('비밀번호 찾기'),
+        title: Text('회원가입'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -1183,7 +1183,7 @@ class PhoneInputGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '가입에 사용한\n휴대폰 번호를 입력해 주세요',
+          '가입에 사용할\n휴대폰 번호를 입력해 주세요',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 10),
@@ -1200,7 +1200,12 @@ class PhoneInputGroup extends StatelessWidget {
         ),
         SizedBox(height: 20), // 위젯 내부의 간격
         ElevatedButton(
-          onPressed: isButtonEnabled ? onRequest : null,
+          onPressed: isButtonEnabled
+              ? () {
+                FocusScope.of(context).unfocus(); // 키보드 닫기
+                onRequest(); // 인증 번호 요청
+                }
+              : null,
           child: Text('인증 번호 요청'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,

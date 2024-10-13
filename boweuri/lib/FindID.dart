@@ -165,12 +165,12 @@ class FindID extends StatefulWidget {
 class _FindIDState extends State<FindID> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _verificationController = TextEditingController();
-  bool _isPhoneButtonEnabled = false;
+  bool _isButtonEnabled = false;
   bool _isVerificationFieldVisible = false; // 인증 번호 입력 필드 가시성 상태
 
   void _checkPhoneNumber(String value) {
     setState(() {
-      _isPhoneButtonEnabled = value.length == 11; // 전화번호가 11자리인지 확인
+      _isButtonEnabled = value.length == 11; // 전화번호가 11자리인지 확인
     });
   }
 
@@ -276,34 +276,36 @@ Future<void> _confirmVerification() async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('아이디 찾기'),
+        title: Text('아이디 찾기'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context); // 뒤로 가기
           },
         ),
       ),
-      body: SingleChildScrollView( // 추가된 부분
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            PhoneInputGroup(
-              controller: _phoneController,
-              onChanged: _checkPhoneNumber,
-              onRequest: _requestVerification,
-              isButtonEnabled: _isPhoneButtonEnabled,
-            ),
-            const SizedBox(height: 20), // 위젯 간격
-            if (_isVerificationFieldVisible) ...[
-              VerificationInputGroup(
-                controller: _verificationController,
-                onConfirm: _confirmVerification,
+      body: SingleChildScrollView( // 변경된 부분
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_isVerificationFieldVisible) ...[
+                VerificationInputGroup(
+                  controller: _verificationController,
+                  onConfirm: _confirmVerification, // 확인 콜백 추가
+                ),
+                Padding(padding: const EdgeInsets.only(top: 150)), // 위젯 간격
+              ],
+              PhoneInputGroup(
+                controller: _phoneController,
+                onChanged: _checkPhoneNumber,
+                onRequest: _requestVerification, // 요청 메서드 변경
+                isButtonEnabled: _isButtonEnabled,
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -316,7 +318,7 @@ class PhoneInputGroup extends StatelessWidget {
   final VoidCallback onRequest;
   final bool isButtonEnabled;
 
-  const PhoneInputGroup({super.key, 
+  PhoneInputGroup({
     required this.controller,
     required this.onChanged,
     required this.onRequest,
@@ -328,31 +330,36 @@ class PhoneInputGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '가입에 사용한\n휴대폰 번호를 입력해 주세요',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         TextField(
           controller: controller,
           keyboardType: TextInputType.phone, // 숫자 키보드 설정
           maxLength: 11,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             border: OutlineInputBorder(),
             hintText: '휴대폰 번호 입력',
             counterText: '', // 카운터 텍스트 숨기기
           ),
           onChanged: onChanged, // 전화번호 입력 시 변경 사항을 전달
         ),
-        const SizedBox(height: 20), // 위젯 내부의 간격
+        SizedBox(height: 20), // 위젯 내부의 간격
         ElevatedButton(
-          onPressed: isButtonEnabled ? onRequest : null,
+          onPressed: isButtonEnabled
+              ? () {
+                FocusScope.of(context).unfocus(); // 키보드 닫기
+                onRequest(); // 인증 번호 요청
+                }
+              : null,
+          child: Text('인증 번호 요청'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,
             foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 50),
+            minimumSize: Size(double.infinity, 50),
           ),
-          child: Text('인증 번호 요청'),
         ),
       ],
     );
@@ -363,34 +370,35 @@ class VerificationInputGroup extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onConfirm; // 확인 버튼 콜백
 
-  const VerificationInputGroup({super.key, required this.controller, required this.onConfirm});
+  VerificationInputGroup({required this.controller, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '발송된 인증번호를 입력해 주세요',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         TextField(
           controller: controller,
-          decoration: const InputDecoration(
+          keyboardType: TextInputType.number, // 숫자 키보드 설정
+          decoration: InputDecoration(
             border: OutlineInputBorder(),
             hintText: '인증번호 입력',
           ),
         ),
-        const SizedBox(height: 20), // 위젯 내부의 간격
+        SizedBox(height: 20), // 위젯 내부의 간격
         ElevatedButton(
-          onPressed: onConfirm,
+          onPressed: onConfirm, // 인증번호 확인 시 콜백 호출
+          child: Text('인증 번호 확인'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,
             foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 50),
-          ), // 인증번호 확인 시 콜백 호출
-          child: Text('인증 번호 확인'),
+            minimumSize: Size(double.infinity, 50),
+          ),
         ),
       ],
     );
