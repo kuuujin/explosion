@@ -327,6 +327,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'LoginScreen.dart';
 
 class FindPW extends StatefulWidget {
   @override
@@ -348,35 +349,40 @@ class _FindPWState extends State<FindPW> {
   Future<void> _requestVerification() async {
     final phoneNumber = _phoneController.text;
 
-    // API 요청
+    // 전화번호 중복 확인
+    final checkResponse = await http.post(
+      Uri.parse('http://34.64.176.207:5000/check_phone'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone_num': phoneNumber}),
+    );
+
+    if (checkResponse.statusCode == 200) {
+      final exists = json.decode(checkResponse.body)['exists'];
+      if (exists==false) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('해당 전화번호로 가입된 계정이 없습니다.')),
+        );
+        return; // 중복된 번호가 있으면 함수 종료
+      }
+    }
+
     try {
       final response = await http.post(
         Uri.parse('http://34.64.176.207:5000/sendsms'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phoneNumber}),  // 전화번호를 JSON 형식으로 전송
+        body: jsonEncode({'phone': phoneNumber}),
       );
 
-      // 서버 응답 상태 코드에 관계없이 두 번째 필드 보이기
       setState(() {
-        _isVerificationFieldVisible = true; // 인증번호 입력 필드 표시
+        _isVerificationFieldVisible = true;
       });
 
-      // 서버 응답 처리 (선택 사항)
-      if (response.statusCode == 200) {
-        // 추가 로직 (예: 성공 메시지 등) 구현 가능
-      } else {
-        // 에러 처리 (예: 사용자에게 알림)
+      if (response.statusCode != 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('인증 번호 요청 실패')),
         );
       }
-    }  on TimeoutException catch (_) {
-    // 타임아웃 발생 시 처리
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('서버와 통신 실패.')),
-    );
-  }catch (e) {
-      // 예외 처리 (예: 네트워크 오류)
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('네트워크 오류 발생')),
       );
@@ -400,7 +406,7 @@ class _FindPWState extends State<FindPW> {
         // 인증 성공 시 비밀번호 재설정 화면으로 이동
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => PasswordReset()),
+          MaterialPageRoute(builder: (context) => PasswordReset(phoneNumber: phoneNumber,)),
         );
       } else {
         // 인증 실패 시 사용자에게 알림
@@ -420,7 +426,7 @@ class _FindPWState extends State<FindPW> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('비밀번호 찾기'),
+        title: Text('비밀번호 재설정'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -550,6 +556,10 @@ class VerificationInputGroup extends StatelessWidget {
 }
 
 class PasswordReset extends StatefulWidget {
+  final String phoneNumber; // 전화번호를 전달받기 위한 변수 추가
+
+  PasswordReset({required this.phoneNumber}); // 생성자에 추가
+
   @override
   _PasswordResetState createState() => _PasswordResetState();
 }
@@ -567,12 +577,33 @@ class _PasswordResetState extends State<PasswordReset> {
     });
   }
 
-  void _resetPassword() {
-    // 비밀번호 재설정 로직
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => PasswordResetSuccess()),
-    );
+  Future<void> _resetPassword() async {
+    final newPassword = _newPasswordController.text;
+    final phoneNumber = widget.phoneNumber; // 전화번호 가져오기
+
+    // 비밀번호 재설정 API 호출
+    try {
+      final response = await http.put(
+        Uri.parse('http://34.64.176.207:5000/users/reset_password'), // 비밀번호 재설정 API
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'phone_num': phoneNumber, 'new_pw': newPassword}), // 전화번호와 새 비밀번호 전송
+      );
+
+      if (response.statusCode == 200) {
+        // 비밀번호 재설정 성공 시
+        _showPasswordResetSuccessDialog(context);
+      } else {
+        // 에러 처리
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('비밀번호 재설정 실패')),
+        );
+      }
+    } catch (e) {
+      // 네트워크 오류 처리
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('네트워크 오류 발생')),
+      );
+    }
   }
 
   @override
@@ -587,7 +618,7 @@ class _PasswordResetState extends State<PasswordReset> {
           },
         ),
       ),
-      body: SingleChildScrollView( // 추가된 부분
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -639,23 +670,27 @@ class _PasswordResetState extends State<PasswordReset> {
   }
 }
 
-class PasswordResetSuccess extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+
+void _showPasswordResetSuccessDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
         title: Text('비밀번호 재설정 성공'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Text(
-            '비밀번호가 성공적으로 재설정되었습니다!',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+        content: Text('비밀번호가 성공적으로 재설정되었습니다!'),
+        actions: [
+          TextButton(
+              onPressed: () {
+              Navigator.of(context).pop(); // 팝업 닫기
+              Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()), // LoginScreen으로 이동
+                    );
+                  },
+            child: Text('확인'),
           ),
-        ),
-      ),
-    );
-  }
+        ],
+      );
+    },
+  );
 }
