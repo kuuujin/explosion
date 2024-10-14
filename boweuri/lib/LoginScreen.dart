@@ -149,14 +149,43 @@
 //     );
 //   }
 // }
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'FindID.dart'; // FindID.dart 파일 import
 import 'FindPW.dart'; // FindPw.dart 파일 import
 import 'Register.dart'; // Register.dart 파일 import
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+  LoginScreen({super.key});
+
+  final TextEditingController _idController = TextEditingController();
+  final TextEditingController _pwController = TextEditingController();
+
+   Future<void> _login(String id, String password, BuildContext context) async {
+    final url = Uri.parse('http://34.64.176.207:5000/users/login'); // 로그인 엔드포인트 URL
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'login_id': id, 'password': password}),
+    );
+
+    if (response.statusCode == 200) {
+      // 로그인 성공 처리
+      final responseData = json.decode(response.body);
+      // 예: 사용자 정보를 저장하거나 다음 화면으로 이동
+      print('로그인 성공: ${responseData}');
+    } else {
+      // 로그인 실패 처리
+      final errorData = json.decode(response.body);
+      print('로그인 실패: ${errorData['error']}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('로그인 실패: ${errorData['error']}')),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -187,17 +216,19 @@ class LoginScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 // 아이디 입력 필드
-                const TextField(
-                  decoration: InputDecoration(
+                TextField(
+                  controller: _idController,
+                  decoration: const InputDecoration(
                     labelText: '아이디',
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 10),
                 // 비밀번호 입력 필드
-                const TextField(
+                TextField(
+                  controller: _pwController,
                   obscureText: true,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: '비밀번호',
                     border: OutlineInputBorder(),
                   ),
@@ -206,7 +237,7 @@ class LoginScreen extends StatelessWidget {
                 // 로그인 버튼
                 OutlinedButton(
                   onPressed: () {
-                    // 로그인 처리
+                    _login(_idController.text, _pwController.text, context);
                   },
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white, // 배경색

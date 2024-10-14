@@ -1012,55 +1012,25 @@ class _RegisterState extends State<Register> {
     });
   }
 
-Future<void> _registerUser() async {
-  // 전화번호 중복 확인
-  final phoneNumber = phoneController.text;
-
-  // 전화번호가 이미 존재하는지 확인하는 API 호출
-  final checkResponse = await http.post(
-    Uri.parse('http://34.64.176.207:5000/check_phone'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'phone_num': phoneNumber}),
-  );
-
-  if (checkResponse.statusCode == 200) {
-    final exists = json.decode(checkResponse.body)['exists'];
-    if (exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('해당 전화번호로 이미 계정이 존재합니다.')),
-      );
-      return; // 중복된 번호가 있으면 함수 종료
-    }
-  }
-
-  // 사용자 등록 로직
-  final response = await http.post(
-    Uri.parse('http://34.64.176.207:5000/users'), // Flask 서버 주소
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'name': nameController.text,
-      'phone_num': phoneNumber,
-      'login_id': loginIdController.text,
-      'pw': passwordController.text,
-      'email': emailController.text,
-      'birthdate': birthdateController.text,
-    }),
-  );
-
-  if (response.statusCode == 201) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('사용자 등록 성공!')),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('사용자 등록 실패: ${json.decode(response.body)['error']}')),
-    );
-  }
-}
-
-
   Future<void> _requestVerification() async {
     final phoneNumber = phoneController.text;
+
+    // 전화번호 중복 확인
+    final checkResponse = await http.post(
+      Uri.parse('http://34.64.176.207:5000/check_phone'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone_num': phoneNumber}),
+    );
+
+    if (checkResponse.statusCode == 200) {
+      final exists = json.decode(checkResponse.body)['exists'];
+      if (exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('해당 전화번호로 이미 계정이 존재합니다.')),
+        );
+        return; // 중복된 번호가 있으면 함수 종료
+      }
+    }
 
     try {
       final response = await http.post(
@@ -1086,48 +1056,48 @@ Future<void> _registerUser() async {
   }
 
   Future<void> _confirmVerification() async {
-    final phoneNumber = phoneController.text;
-    final verificationCode = verificationCodeController.text;
+  final phoneNumber = phoneController.text;
+  final verificationCode = verificationCodeController.text;
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://34.64.176.207:5000/verify'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phoneNumber, 'code': verificationCode}),
-      );
+  try {
+    final response = await http.post(
+      Uri.parse('http://34.64.176.207:5000/verify'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': phoneNumber, 'code': verificationCode}),
+    );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AccountInfoScreen(
-              phoneNumber: phoneController.text,
-              onRegister: _registerUser, // onRegister 매개변수 추가
-              nameController: nameController, // 이름 컨트롤러 추가
-              loginIdController: loginIdController, // 아이디 컨트롤러 추가
-              passwordController: passwordController, // 비밀번호 컨트롤러 추가
-              emailController: emailController, // 이메일 컨트롤러 추가
-              birthdateController: birthdateController,
-            ),
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AccountInfoScreen(
+            phoneNumber: phoneController.text,
+            nameController: nameController,
+            loginIdController: loginIdController,
+            passwordController: passwordController,
+            emailController: emailController,
+            birthdateController: birthdateController,
+            phoneController: phoneController, // 전화번호 컨트롤러 전달
           ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('인증 번호가 일치하지 않습니다.')),
-        );
-      }
-    } catch (e) {
+        ),
+      );
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('네트워크 오류 발생')),
+        SnackBar(content: Text('인증 번호가 일치하지 않습니다.')),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('네트워크 오류 발생')),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('비밀번호 찾기'),
+        title: Text('회원가입'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -1156,7 +1126,6 @@ Future<void> _registerUser() async {
                 isButtonEnabled: _isButtonEnabled,
               ),
               SizedBox(height: 20),
-              // '다음' 버튼 제거
             ],
           ),
         ),
@@ -1184,22 +1153,22 @@ class PhoneInputGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '가입에 사용한\n휴대폰 번호를 입력해 주세요',
+          '가입에 사용할\n휴대폰 번호를 입력해 주세요',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 10),
         TextField(
           controller: controller,
-          keyboardType: TextInputType.phone, // 숫자 키보드 설정
+          keyboardType: TextInputType.phone,
           maxLength: 11,
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             hintText: '휴대폰 번호 입력',
-            counterText: '', // 카운터 텍스트 숨기기
+            counterText: '',
           ),
-          onChanged: onChanged, // 전화번호 입력 시 변경 사항을 전달
+          onChanged: onChanged,
         ),
-        SizedBox(height: 20), // 위젯 내부의 간격
+        SizedBox(height: 20),
         ElevatedButton(
           onPressed: isButtonEnabled ? onRequest : null,
           child: Text('인증 번호 요청'),
@@ -1216,7 +1185,7 @@ class PhoneInputGroup extends StatelessWidget {
 
 class VerificationInputGroup extends StatelessWidget {
   final TextEditingController controller;
-  final VoidCallback onConfirm; // 확인 버튼 콜백
+  final VoidCallback onConfirm;
 
   VerificationInputGroup({required this.controller, required this.onConfirm});
 
@@ -1232,15 +1201,15 @@ class VerificationInputGroup extends StatelessWidget {
         SizedBox(height: 10),
         TextField(
           controller: controller,
-          keyboardType: TextInputType.number, // 숫자 키보드 설정
+          keyboardType: TextInputType.number,
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             hintText: '인증번호 입력',
           ),
         ),
-        SizedBox(height: 20), // 위젯 내부의 간격
+        SizedBox(height: 20),
         ElevatedButton(
-          onPressed: onConfirm, // 인증번호 확인 시 콜백 호출
+          onPressed: onConfirm,
           child: Text('인증 번호 확인'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,
@@ -1253,24 +1222,23 @@ class VerificationInputGroup extends StatelessWidget {
   }
 }
 
-// 계정 정보 및 회원 정보 입력 화면
 class AccountInfoScreen extends StatefulWidget {
   final String phoneNumber;
-  final VoidCallback onRegister; 
-  final TextEditingController nameController; 
-  final TextEditingController loginIdController; 
-  final TextEditingController passwordController; 
-  final TextEditingController emailController; 
-  final TextEditingController birthdateController; // 생년월일 컨트롤러 추가
+  final TextEditingController nameController;
+  final TextEditingController loginIdController;
+  final TextEditingController passwordController;
+  final TextEditingController emailController;
+  final TextEditingController birthdateController;
+  final TextEditingController phoneController; // 전화번호 컨트롤러 추가
 
   AccountInfoScreen({
     required this.phoneNumber,
-    required this.onRegister,
     required this.nameController,
     required this.loginIdController,
     required this.passwordController,
     required this.emailController,
-    required this.birthdateController, // 생년월일 컨트롤러 초기화
+    required this.birthdateController,
+    required this.phoneController, // 전화번호 컨트롤러 초기화
   });
 
   @override
@@ -1279,12 +1247,12 @@ class AccountInfoScreen extends StatefulWidget {
 
 class _AccountInfoScreenState extends State<AccountInfoScreen> {
   DateTime? _selectedDate;
-  final TextEditingController _dobController = TextEditingController(); 
-
+  final TextEditingController _dobController = TextEditingController();
+  
   @override
   void initState() {
     super.initState();
-    _dobController.text = ""; 
+    _dobController.text = "";
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -1296,7 +1264,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
-        _selectedDate = picked; 
+        _selectedDate = picked;
         _dobController.text = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
         widget.birthdateController.text = _dobController.text; // 생년월일 컨트롤러에 값 저장
       });
@@ -1326,7 +1294,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             ),
             SizedBox(height: 20),
             TextField(
-              controller: widget.loginIdController, 
+              controller: widget.loginIdController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '아이디',
@@ -1342,7 +1310,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             ),
             SizedBox(height: 10),
             TextField(
-              controller: widget.emailController, 
+              controller: widget.emailController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '이메일 주소',
@@ -1355,7 +1323,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             ),
             SizedBox(height: 20),
             TextField(
-              controller: widget.nameController, 
+              controller: widget.nameController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '이름',
@@ -1363,23 +1331,23 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             ),
             SizedBox(height: 10),
             TextField(
-              controller: TextEditingController(text: widget.phoneNumber), 
+              controller: TextEditingController(text: widget.phoneNumber),
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '전화번호',
               ),
-              enabled: false, 
+              enabled: false,
             ),
             SizedBox(height: 10),
             GestureDetector(
-              onTap: () => _selectDate(context), 
+              onTap: () => _selectDate(context),
               child: AbsorbPointer(
                 child: TextField(
-                  controller: _dobController, 
+                  controller: _dobController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: '생년월일',
-                    hintText: '생년월일 선택', 
+                    hintText: '생년월일 선택',
                   ),
                 ),
               ),
@@ -1391,7 +1359,12 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ProfileSettingScreen(
-                      onRegister: widget.onRegister, 
+                      phoneController: widget.phoneController,
+                      nameController: widget.nameController,
+                      loginIdController: widget.loginIdController,
+                      passwordController: widget.passwordController,
+                      emailController: widget.emailController,
+                      birthdateController: widget.birthdateController,
                     ),
                   ),
                 );
@@ -1410,10 +1383,53 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
   }
 }
 
-class ProfileSettingScreen extends StatelessWidget {
-  final VoidCallback onRegister;
 
-  ProfileSettingScreen({required this.onRegister});
+class ProfileSettingScreen extends StatelessWidget {
+  final TextEditingController nicknameController = TextEditingController();
+  final TextEditingController phoneController;
+  final TextEditingController nameController;
+  final TextEditingController loginIdController;
+  final TextEditingController passwordController;
+  final TextEditingController emailController;
+  final TextEditingController birthdateController;
+
+  ProfileSettingScreen({
+    required this.phoneController,
+    required this.nameController,
+    required this.loginIdController,
+    required this.passwordController,
+    required this.emailController,
+    required this.birthdateController,
+  });
+
+  Future<void> _registerUser(BuildContext context) async {
+    final phoneNumber = phoneController.text;
+    
+
+    final response = await http.post(
+      Uri.parse('http://34.64.176.207:5000/users'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': nameController.text,
+        'phone_num': phoneNumber,
+        'login_id': loginIdController.text,
+        'pw': passwordController.text,
+        'email': emailController.text,
+        'birthdate': birthdateController.text,
+        'nickname': nicknameController.text, // 닉네임 추가
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('사용자 등록 성공!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('사용자 등록 실패: ${json.decode(response.body)['error']}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1441,6 +1457,7 @@ class ProfileSettingScreen extends StatelessWidget {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: nicknameController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '닉네임',
@@ -1448,7 +1465,7 @@ class ProfileSettingScreen extends StatelessWidget {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: onRegister, 
+              onPressed: () => _registerUser(context),
               child: Text('회원가입 하기'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink,
@@ -1462,3 +1479,4 @@ class ProfileSettingScreen extends StatelessWidget {
     );
   }
 }
+
