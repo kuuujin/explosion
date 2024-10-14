@@ -684,7 +684,7 @@ void _showPasswordResetSuccessDialog(BuildContext context) {
               Navigator.of(context).pop(); // 팝업 닫기
               Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()), // LoginScreen으로 이동
+              MaterialPageRoute(builder: (context) => LoginScreen()), // LoginScreen으로 이동
                     );
                   },
             child: Text('확인'),

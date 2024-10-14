@@ -179,32 +179,42 @@ class _FindIDState extends State<FindID> {
   Future<void> _requestVerification() async {
     final phoneNumber = _phoneController.text;
 
-    // API 요청
+    // 전화번호 중복 확인
+    final checkResponse = await http.post(
+      Uri.parse('http://34.64.176.207:5000/check_phone'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone_num': phoneNumber}),
+    );
+
+    if (checkResponse.statusCode == 200) {
+      final exists = json.decode(checkResponse.body)['exists'];
+      if (exists==false) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('해당 전화번호로 가입된 계정이 없습니다.')),
+        );
+        return; // 중복된 번호가 있으면 함수 종료
+      }
+    }
+
     try {
       final response = await http.post(
         Uri.parse('http://34.64.176.207:5000/sendsms'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phoneNumber}), // 전화번호를 JSON 형식으로 전송
+        body: jsonEncode({'phone': phoneNumber}),
       );
 
-      // 인증 번호 입력 필드 표시
       setState(() {
-        _isVerificationFieldVisible = true; 
+        _isVerificationFieldVisible = true;
       });
 
-      // 서버 응답 상태 코드 처리
-      if (response.statusCode == 200) {
+      if (response.statusCode != 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('인증 번호 요청 완료')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('인증 번호 요청 실패')),
+          SnackBar(content: Text('인증 번호 요청 실패')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('네트워크 오류 발생')),
+        SnackBar(content: Text('네트워크 오류 발생')),
       );
     }
   }

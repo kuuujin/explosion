@@ -173,18 +173,48 @@ class LoginScreen extends StatelessWidget {
 
     if (response.statusCode == 200) {
       // 로그인 성공 처리
-      final responseData = json.decode(response.body);
-      // 예: 사용자 정보를 저장하거나 다음 화면으로 이동
-      print('로그인 성공: ${responseData}');
-    } else {
-      // 로그인 실패 처리
-      final errorData = json.decode(response.body);
-      print('로그인 실패: ${errorData['error']}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('로그인 실패: ${errorData['error']}')),
+      showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('로그인 성공'),
+        content: Text('로그인에 성공했습니다.'),
+        actions: [
+          TextButton(
+            child: Text('확인'),
+            onPressed: () {
+              Navigator.of(context).pop(); // 팝업 닫기
+              // 다음 화면으로 이동하는 코드를 여기에 추가할 수 있습니다.
+            },
+          ),
+        ],
       );
-    }
-  }
+    },
+  );
+} else { 
+  // 로그인 실패 처리
+  final errorData = json.decode(response.body);
+  
+  // 로그인 실패 팝업창 띄우기
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('로그인 실패'),
+        content: Text('로그인 실패: ${errorData['error']}'),
+        actions: [
+          TextButton(
+            child: Text('확인'),
+            onPressed: () {
+              Navigator.of(context).pop(); // 팝업 닫기
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+   }
 
 
   @override
