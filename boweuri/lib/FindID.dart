@@ -150,12 +150,16 @@
 // }
 
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'LoginScreen.dart'; // LoginScreen import 추가
 
 class FindID extends StatefulWidget {
+  const FindID({super.key});
+
   @override
   _FindIDState createState() => _FindIDState();
 }
@@ -191,49 +195,59 @@ class _FindIDState extends State<FindID> {
       // 서버 응답 상태 코드 처리
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('인증 번호 요청 완료')),
+          const SnackBar(content: Text('인증 번호 요청 완료')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('인증 번호 요청 실패')),
+          const SnackBar(content: Text('인증 번호 요청 실패')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('네트워크 오류 발생')),
+        const SnackBar(content: Text('네트워크 오류 발생')),
       );
     }
   }
 
-  Future<void> _confirmVerification() async {
-    final phoneNumber = _phoneController.text;
-    final verificationCode = _verificationController.text;
+Future<void> _confirmVerification() async {
+  final phoneNumber = _phoneController.text;
+  final verificationCode = _verificationController.text;
 
-    // 서버에 인증 코드 확인 요청
-    try {
-      final response = await http.post(
-        Uri.parse('http://34.64.176.207:5000/verify'),
+  // 서버에 인증 코드 확인 요청
+  try {
+    final response = await http.post(
+      Uri.parse('http://34.64.176.207:5000/verify'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': phoneNumber, 'code': verificationCode}),
+    );
+
+    // 서버 응답 상태 코드 처리
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      // 인증 성공 후 login_id 가져오기
+      final loginIdResponse = await http.post(
+        Uri.parse('http://34.64.176.207:5000/get_login_id'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phoneNumber, 'code': verificationCode}), 
+        body: jsonEncode({'phone': phoneNumber}),
       );
 
-      // 서버 응답 상태 코드 처리
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (loginIdResponse.statusCode == 200) {
+        final loginId = json.decode(loginIdResponse.body)['login_id']; // login_id 가져오기
+
         // 인증 성공 시 팝업창 출력
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('인증 완료'),
-              content: Text('인증완료 확인 테스트'),
+              title: const Text('인증 완료'),
+              content: Text('로그인 ID: $loginId'), // login_id 표시
               actions: [
                 TextButton(
-                  child: Text('확인'),
+                  child: const Text('확인'),
                   onPressed: () {
                     Navigator.of(context).pop(); // 팝업 닫기
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()), // LoginScreen으로 이동
+                      MaterialPageRoute(builder: (context) => const LoginScreen()), // LoginScreen으로 이동
                     );
                   },
                 ),
@@ -243,15 +257,27 @@ class _FindIDState extends State<FindID> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('인증 번호가 일치하지 않습니다.')),
+          const SnackBar(content: Text('사용자를 찾을 수 없습니다.')),
         );
       }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('네트워크 오류 발생')),
+        const SnackBar(content: Text('인증 번호가 일치하지 않습니다.')),
       );
     }
+  }  on TimeoutException catch (_) {
+    // 타임아웃 발생 시 처리
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('서버와 통신 실패.')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('네트워크 오류 발생')),
+    );
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -329,7 +355,12 @@ class PhoneInputGroup extends StatelessWidget {
         ),
         SizedBox(height: 20), // 위젯 내부의 간격
         ElevatedButton(
-          onPressed: isButtonEnabled ? onRequest : null,
+          onPressed: isButtonEnabled
+              ? () {
+                FocusScope.of(context).unfocus(); // 키보드 닫기
+                onRequest(); // 인증 번호 요청
+                }
+              : null,
           child: Text('인증 번호 요청'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,
@@ -360,6 +391,7 @@ class VerificationInputGroup extends StatelessWidget {
         SizedBox(height: 10),
         TextField(
           controller: controller,
+          keyboardType: TextInputType.number, // 숫자 키보드 설정
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             hintText: '인증번호 입력',

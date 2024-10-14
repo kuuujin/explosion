@@ -322,6 +322,8 @@
 //   }
 // }//
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -368,7 +370,12 @@ class _FindPWState extends State<FindPW> {
           SnackBar(content: Text('인증 번호 요청 실패')),
         );
       }
-    } catch (e) {
+    }  on TimeoutException catch (_) {
+    // 타임아웃 발생 시 처리
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('서버와 통신 실패.')),
+    );
+  }catch (e) {
       // 예외 처리 (예: 네트워크 오류)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('네트워크 오류 발생')),
@@ -485,7 +492,12 @@ class PhoneInputGroup extends StatelessWidget {
         ),
         SizedBox(height: 20), // 위젯 내부의 간격
         ElevatedButton(
-          onPressed: isButtonEnabled ? onRequest : null,
+          onPressed: isButtonEnabled
+              ? () {
+                FocusScope.of(context).unfocus(); // 키보드 닫기
+                onRequest(); // 인증 번호 요청
+                }
+              : null,
           child: Text('인증 번호 요청'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,
