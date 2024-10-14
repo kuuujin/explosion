@@ -1107,6 +1107,7 @@ Future<void> _registerUser() async {
               loginIdController: loginIdController, // 아이디 컨트롤러 추가
               passwordController: passwordController, // 비밀번호 컨트롤러 추가
               emailController: emailController, // 이메일 컨트롤러 추가
+              birthdateController: birthdateController,
             ),
           ),
         );
@@ -1255,11 +1256,12 @@ class VerificationInputGroup extends StatelessWidget {
 // 계정 정보 및 회원 정보 입력 화면
 class AccountInfoScreen extends StatefulWidget {
   final String phoneNumber;
-  final VoidCallback onRegister; // 추가된 부분
-  final TextEditingController nameController; // 이름 컨트롤러 추가
-  final TextEditingController loginIdController; // 아이디 컨트롤러 추가
-  final TextEditingController passwordController; // 비밀번호 컨트롤러 추가
-  final TextEditingController emailController; // 이메일 컨트롤러 추가
+  final VoidCallback onRegister; 
+  final TextEditingController nameController; 
+  final TextEditingController loginIdController; 
+  final TextEditingController passwordController; 
+  final TextEditingController emailController; 
+  final TextEditingController birthdateController; // 생년월일 컨트롤러 추가
 
   AccountInfoScreen({
     required this.phoneNumber,
@@ -1268,6 +1270,7 @@ class AccountInfoScreen extends StatefulWidget {
     required this.loginIdController,
     required this.passwordController,
     required this.emailController,
+    required this.birthdateController, // 생년월일 컨트롤러 초기화
   });
 
   @override
@@ -1276,14 +1279,12 @@ class AccountInfoScreen extends StatefulWidget {
 
 class _AccountInfoScreenState extends State<AccountInfoScreen> {
   DateTime? _selectedDate;
-  final TextEditingController _dobController = TextEditingController(); // 생년월일 컨트롤러 추가
+  final TextEditingController _dobController = TextEditingController(); 
 
   @override
   void initState() {
     super.initState();
-    // 전화번호 초기화
-    // 생년월일 컨트롤러는 빈 문자열로 초기화
-    _dobController.text = ""; // 생년월일 필드 비워두기
+    _dobController.text = ""; 
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -1295,8 +1296,9 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
-        _selectedDate = picked; // 선택된 날짜 저장
-        _dobController.text = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}"; // 생년월일 필드 업데이트
+        _selectedDate = picked; 
+        _dobController.text = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
+        widget.birthdateController.text = _dobController.text; // 생년월일 컨트롤러에 값 저장
       });
     }
   }
@@ -1324,7 +1326,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             ),
             SizedBox(height: 20),
             TextField(
-              controller: widget.loginIdController, // 아이디 입력
+              controller: widget.loginIdController, 
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '아이디',
@@ -1340,7 +1342,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             ),
             SizedBox(height: 10),
             TextField(
-              controller: widget.emailController, // 이메일 입력
+              controller: widget.emailController, 
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '이메일 주소',
@@ -1353,32 +1355,31 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             ),
             SizedBox(height: 20),
             TextField(
-              controller: widget.nameController, // 이름 입력
+              controller: widget.nameController, 
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '이름',
               ),
             ),
             SizedBox(height: 10),
-            // 전화번호를 직접 표시
             TextField(
-              controller: TextEditingController(text: widget.phoneNumber), // 전화번호 표시
+              controller: TextEditingController(text: widget.phoneNumber), 
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '전화번호',
               ),
-              enabled: false, // 전화번호 필드 비활성화
+              enabled: false, 
             ),
             SizedBox(height: 10),
             GestureDetector(
-              onTap: () => _selectDate(context), // 날짜 선택 시 달력 열기
+              onTap: () => _selectDate(context), 
               child: AbsorbPointer(
                 child: TextField(
-                  controller: _dobController, // 생년월일 컨트롤러
+                  controller: _dobController, 
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: '생년월일',
-                    hintText: '생년월일 선택', // 기본 힌트 텍스트
+                    hintText: '생년월일 선택', 
                   ),
                 ),
               ),
@@ -1390,7 +1391,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ProfileSettingScreen(
-                      onRegister: widget.onRegister, // 수정된 부분
+                      onRegister: widget.onRegister, 
                     ),
                   ),
                 );
@@ -1408,7 +1409,6 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
     );
   }
 }
-
 
 class ProfileSettingScreen extends StatelessWidget {
   final VoidCallback onRegister;
