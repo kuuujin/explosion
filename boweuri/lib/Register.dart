@@ -988,6 +988,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'LoginScreen.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -1170,14 +1171,19 @@ class PhoneInputGroup extends StatelessWidget {
         ),
         SizedBox(height: 20),
         ElevatedButton(
-          onPressed: isButtonEnabled ? onRequest : null,
-          child: Text('인증 번호 요청'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.pink,
-            foregroundColor: Colors.white,
-            minimumSize: Size(double.infinity, 50),
-          ),
-        ),
+          onPressed: isButtonEnabled
+      ? () {
+          FocusScope.of(context).unfocus(); // 키보드 닫기
+          onRequest(); // 인증 번호 요청
+        }
+      : null,
+  child: Text('인증 번호 요청'),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.pink,
+    foregroundColor: Colors.white,
+    minimumSize: Size(double.infinity, 50),
+  ),
+),
       ],
     );
   }
@@ -1303,6 +1309,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             SizedBox(height: 10),
             TextField(
               obscureText: true,
+              controller: widget.passwordController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '비밀번호',
@@ -1403,47 +1410,65 @@ class ProfileSettingScreen extends StatelessWidget {
   });
 
   Future<void> _registerUser(BuildContext context) async {
-    final phoneNumber = phoneController.text;
-    
+  final phoneNumber = phoneController.text;
 
-    final response = await http.post(
-      Uri.parse('http://34.64.176.207:5000/users'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'name': nameController.text,
-        'phone_num': phoneNumber,
-        'login_id': loginIdController.text,
-        'pw': passwordController.text,
-        'email': emailController.text,
-        'birthdate': birthdateController.text,
-        'nickname': nicknameController.text, // 닉네임 추가
-      }),
+  final response = await http.post(
+    Uri.parse('http://34.64.176.207:5000/users'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'name': nameController.text,
+      'phone_num': phoneNumber,
+      'login_id': loginIdController.text,
+      'pw': passwordController.text,
+      'email': emailController.text,
+      'birthdate': birthdateController.text,
+      'nickname': nicknameController.text, // 닉네임 추가
+    }),
+  );
+
+  if (response.statusCode == 201) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('회원가입 성공'),
+          content: Text('회원가입이 완료되었습니다.'),
+          actions: [
+            TextButton(
+              child: Text('확인'),
+              onPressed: () {
+                Navigator.of(context).pop(); // 다이얼로그 닫기
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()), // LoginScreen으로 이동
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
-
-    if (response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('사용자 등록 성공!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('사용자 등록 실패: ${json.decode(response.body)['error']}')),
-      );
-    }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('사용자 등록 실패: ${json.decode(response.body)['error']}')),
+    );
   }
+}
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('프로필 설정'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text('프로필 설정'),
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context);
+        },
       ),
-      body: Padding(
+    ),
+    body: SingleChildScrollView(  // SingleChildScrollView 추가
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1476,7 +1501,7 @@ class ProfileSettingScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
 }
-
+}
