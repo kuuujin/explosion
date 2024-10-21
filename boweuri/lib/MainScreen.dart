@@ -6,6 +6,7 @@ import 'MyScore.dart'; // 내기록 탭의 내용을 위한 파일
 import 'Ranking.dart'; // 랭킹 탭의 내용을 위한 파일
 import 'Alarm.dart'; // 알림 화면
 import 'EditProfile.dart'; // 프로필 수정 화면
+import 'MyProfile.dart'; // 프로필 화면
 
 void main() {
   runApp(MyApp());
@@ -71,7 +72,7 @@ class _MainScreenState extends State<MainScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => EditProfile()), // 프로필 수정 화면으로 전환
+                      MaterialPageRoute(builder: (context) => MyProfile()), // 프로필 화면으로 전환
                     );
                   },
                   child: Icon(Icons.account_circle, size: 40), // 사용자 아이콘
