@@ -292,7 +292,9 @@ Future<void> _confirmVerification() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text('아이디 찾기'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -313,7 +315,7 @@ Future<void> _confirmVerification() async {
                   controller: _verificationController,
                   onConfirm: _confirmVerification, // 확인 콜백 추가
                 ),
-                Padding(padding: const EdgeInsets.only(top: 150)), // 위젯 간격
+                Padding(padding: const EdgeInsets.only(top: 100)), // 위젯 간격
               ],
               PhoneInputGroup(
                 controller: _phoneController,

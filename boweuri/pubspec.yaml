@@ -31,10 +31,12 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.2
-
+  intl: ^0.17.0
+  image_picker: ^1.1.2
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +64,9 @@ flutter:
   assets:
     - asset/images/보으링아이콘.png
     - asset/images/보으링로고.png
+    - asset/images/1단계.png
+    - asset/images/2단계.png
+    - asset/images/3단계.png
     # - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
