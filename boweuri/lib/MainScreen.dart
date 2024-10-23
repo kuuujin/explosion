@@ -34,6 +34,7 @@ class _MainScreenState extends State<MainScreen> {
     String todayDate = DateFormat('yyyy.MM.dd').format(DateTime.now());
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           // 상단 바
@@ -47,10 +48,7 @@ class _MainScreenState extends State<MainScreen> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Alarm()), // 알림 화면으로 전환
-                    );
+                    Navigator.of(context).push(_createRouteForAlarm()); // 알림 화면으로 전환
                   },
                   child: Icon(Icons.notifications, color: Colors.black, size: 40), // 알림 아이콘
                 ),
@@ -70,10 +68,7 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MyProfile()), // 프로필 화면으로 전환
-                    );
+                      Navigator.of(context).push(_createRoute()); // 프로필 화면으로 전환
                   },
                   child: Icon(Icons.account_circle, size: 40), // 사용자 아이콘
                 ),
@@ -191,4 +186,44 @@ class _MainScreenState extends State<MainScreen> {
         return Center(child: Text('내용 없음', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)));
     }
   }
+
+  Route _createRoute() {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => MyProfile(),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0); // 오른쪽에서 시작
+      const end = Offset.zero; // 원래 위치로
+      const curve = Curves.easeInOut; // 애니메이션 곡선
+
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      var offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 250), // 애니메이션 시간
+  );
+}
+ Route _createRouteForAlarm() {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => Alarm(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(-1.0, 0.0); // 왼쪽에서 시작
+        const end = Offset.zero; // 원래 위치로
+        const curve = Curves.easeInOut; // 애니메이션 곡선
+
+        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(
+          position: offsetAnimation,
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300), // 애니메이션 시간
+    );
+  }
+
 }
