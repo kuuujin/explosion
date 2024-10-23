@@ -1,19 +1,41 @@
-
+import 'package:flutter_application_1/MainScreen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'FindID.dart'; // FindID.dart 파일 import
-import 'FindPW.dart'; // FindPw.dart 파일 import
-import 'Register.dart'; // Register.dart 파일 import
+import 'FindID.dart';
+import 'FindPW.dart';
+import 'Register.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   LoginScreen({super.key});
 
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _pwController = TextEditingController();
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
 
-   Future<void> _login(String id, String password, BuildContext context) async {
-    final url = Uri.parse('http://34.64.176.207:5000/users/login'); // 로그인 엔드포인트 URL
+  @override
+  void initState() {
+    super.initState();
+    _loadLoginInfo();
+  }
+
+  Future<void> _loadLoginInfo() async {
+    String? id = await _storage.read(key: 'login_id');
+    String? password = await _storage.read(key: 'password');
+
+    if (id != null && password != null) {
+      _login(id, password, context);
+    }
+  }
+
+  Future<void> _login(String id, String password, BuildContext context) async {
+    final url = Uri.parse('http://34.64.176.207:5000/users/login');
 
     final response = await http.post(
       url,
@@ -23,58 +45,45 @@ class LoginScreen extends StatelessWidget {
 
     if (response.statusCode == 200) {
       // 로그인 성공 처리
-      showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('로그인 성공'),
-        content: Text('로그인에 성공했습니다.'),
-        actions: [
-          TextButton(
-            child: Text('확인'),
-            onPressed: () {
-              Navigator.of(context).pop(); // 팝업 닫기
-              // 다음 화면으로 이동하는 코드를 여기에 추가할 수 있습니다.
-            },
-          ),
-        ],
-      );
-    },
-  );
-} else { 
-  // 로그인 실패 처리
-  final errorData = json.decode(response.body);
-  
-  // 로그인 실패 팝업창 띄우기
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('로그인 실패'),
-        content: Text('로그인 실패: ${errorData['error']}'),
-        actions: [
-          TextButton(
-            child: Text('확인'),
-            onPressed: () {
-              Navigator.of(context).pop(); // 팝업 닫기
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-   }
+      // 로그인 정보 저장
+      await _storage.write(key: 'login_id', value: id);
+      await _storage.write(key: 'password', value: password);
 
+      Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MainScreen()),
+    );
+  } else {
+      // 로그인 실패 처리
+      final errorData = json.decode(response.body);
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('로그인 실패'),
+            content: Text('로그인 실패: ${errorData['error']}'),
+            actions: [
+              TextButton(
+                child: Text('확인'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView( // 추가된 부분
+      body: SingleChildScrollView(
         child: Center(
           child: Container(
-            width: 300, // 원하는 너비 설정
+            width: 300,
             padding: const EdgeInsets.all(16.0),
             margin: const EdgeInsets.only(top: 50),
             child: Column(
@@ -84,15 +93,15 @@ class LoginScreen extends StatelessWidget {
                 Column(
                   children: [
                     Image.asset(
-                      'asset/images/보으링로고.png', // 이미지 경로
+                      'asset/images/보으링로고.png',
                       width: 276,
-                      height: 122, // 이미지 높이
+                      height: 122,
                     ),
                     const SizedBox(height: 10),
                     Image.asset(
-                      'asset/images/보으링아이콘.png', // 이미지 경로
+                      'asset/images/보으링아이콘.png',
                       width: 219,
-                      height: 205, // 이미지 높이
+                      height: 205,
                     ),
                   ],
                 ),
@@ -122,37 +131,20 @@ class LoginScreen extends StatelessWidget {
                     _login(_idController.text, _pwController.text, context);
                   },
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white, // 배경색
-                    foregroundColor: const Color(0xFFFC245A), // 텍스트 색상
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFFFC245A),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10), // 코너 반경
+                      borderRadius: BorderRadius.circular(10),
                       side: const BorderSide(
-                        color: Color(0xFFFC245A), // 테두리 색상
-                        width: 2, // 테두리 두께
+                        color: Color(0xFFFC245A),
+                        width: 2,
                       ),
                     ),
-                    minimumSize: const Size(300, 40), // 버튼 크기 설정
+                    minimumSize: const Size(300, 40),
                   ),
                   child: Text('로그인'),
                 ),
                 const SizedBox(height: 20),
-                // 카카오톡 로그인 버튼
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // 카카오톡 로그인 처리
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.yellow, // 버튼 색상
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)
-                      ) // 텍스트 색상
-                    ),
-                    child: Text('카카오톡으로 로그인 하기'),
-                  ),
-                ),
                 const SizedBox(height: 30),
                 // 하단 텍스트
                 Row(
@@ -160,10 +152,9 @@ class LoginScreen extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        // 아이디 찾기 이벤트 처리
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => FindID()), // FindID 화면으로 이동
+                          MaterialPageRoute(builder: (context) => FindID()),
                         );
                       },
                       child: const Text(
@@ -172,17 +163,16 @@ class LoginScreen extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      width: 1, // 선의 두께
-                      height: 20, // 선의 높이
-                      color: Colors.black54, // 선의 색상
-                      margin: const EdgeInsets.symmetric(horizontal: 10), // 간격
+                      width: 1,
+                      height: 20,
+                      color: Colors.black54,
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
                     ),
                     GestureDetector(
                       onTap: () {
-                        // 비밀번호 재설정 이벤트 처리
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => FindPW()), // FindPw 화면으로 이동
+                          MaterialPageRoute(builder: (context) => FindPW()),
                         );
                       },
                       child: const Text(
@@ -191,17 +181,16 @@ class LoginScreen extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      width: 1, // 선의 두께
-                      height: 20, // 선의 높이
-                      color: Colors.black54, // 선의 색상
-                      margin: const EdgeInsets.symmetric(horizontal: 10), // 간격
+                      width: 1,
+                      height: 20,
+                      color: Colors.black54,
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
                     ),
                     GestureDetector(
                       onTap: () {
-                        // 회원가입 이벤트 처리
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => Register()), // Register 화면으로 이동
+                          MaterialPageRoute(builder: (context) => Register()),
                         );
                       },
                       child: const Text(
@@ -211,7 +200,6 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                
               ],
             ),
           ),
