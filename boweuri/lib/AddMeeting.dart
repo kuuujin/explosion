@@ -271,6 +271,7 @@ class _AddMeetingState extends State<AddMeeting> {
   XFile? _image;
   String title ='';
   String place = '';
+  String pay = '';
 
   final ImagePicker _picker = ImagePicker(); // ImagePicker 인스턴스 생성
 
@@ -389,6 +390,12 @@ class _AddMeetingState extends State<AddMeeting> {
             _buildTextField(Icons.location_on, '위치 입력', (value) {
               setState(() {
                 place = value; // 사용자 입력 업데이트
+              });
+            }),
+            SizedBox(height: 30),
+            _buildTextField(Icons.attach_money, '비용 입력', (value) {
+              setState(() {
+                pay = value; // 사용자 입력 업데이트
               });
             }),
             SizedBox(height: 30),
