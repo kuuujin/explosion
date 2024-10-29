@@ -256,7 +256,9 @@ import 'dart:io'; // 파일 처리 위한 패키지
 import 'package:flutter/material.dart'; // Flutter 관련 패키지
 import 'package:image_picker/image_picker.dart'; // 이미지 선택 패키지
 //import 'package:path/path.dart'; // 경로 처리 패키지
-import 'package:http/http.dart' as http; 
+import 'package:http/http.dart' as http;
+import 'dart:typed_data';
+import 'MainScreen.dart';
 
 
 class AddMeeting extends StatefulWidget {
@@ -285,7 +287,7 @@ class _AddMeetingState extends State<AddMeeting> {
   }
 
   Future<void> _submitMeeting() async {
-  if (_image == null || selectedDate == null || selectedTime == null) {
+  if (selectedDate == null || selectedTime == null) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('모든 필드를 입력해주세요.')),
     );
@@ -293,8 +295,11 @@ class _AddMeetingState extends State<AddMeeting> {
   }
 
   // 이미지 파일 읽기
-  final bytes = await File(_image!.path).readAsBytes();
-  String base64Image = base64Encode(bytes); // Base64로 인코딩
+  String? base64Image;
+    if (_image != null) {
+      Uint8List imageBytes = await _image!.readAsBytes();
+      base64Image = base64Encode(imageBytes);
+    }
 
   // JSON 데이터 생성
   Map<String, dynamic> data = {
@@ -303,6 +308,7 @@ class _AddMeetingState extends State<AddMeeting> {
     'time': '${selectedTime!.hour}:${selectedTime!.minute}',
     'place': place, // TextField에서 입력 받은 값으로 변경
     'join_cnt': selectedPeople.toString(),
+    'pay' : pay,
     'images': base64Image, // Base64 인코딩된 이미지
   };
 
@@ -313,10 +319,28 @@ class _AddMeetingState extends State<AddMeeting> {
     body: jsonEncode(data), // JSON 형식으로 변환
   );
 
-  if (response.statusCode == 200) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('정모가 추가되었습니다.')),
-    );
+  if (response.statusCode == 201) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('등록 완료'),
+            content: Text('정모를 등록하였습니다.'),
+            actions: [
+              TextButton(
+                child: Text('확인'),
+                onPressed: () {
+                  Navigator.of(context).pop(); // 다이얼로그 닫기
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => MainScreen()), //
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      );
   } else {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('정모 추가 실패: ${response.statusCode}')),
@@ -406,7 +430,7 @@ class _AddMeetingState extends State<AddMeeting> {
             SizedBox(height: 20), // 버튼 위 여백 추가
             ElevatedButton(
               onPressed: () {
-                _submitMeeting;
+                _submitMeeting();
               },
               child: Text('정모 일정 추가'),
               style: ElevatedButton.styleFrom(
