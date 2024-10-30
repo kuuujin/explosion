@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 class MyScore extends StatelessWidget {
+  final String user_id;
+
+  MyScore({required this.user_id});
   @override
   Widget build(BuildContext context) {
     return Center(

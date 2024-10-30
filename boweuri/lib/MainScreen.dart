@@ -8,20 +8,24 @@ import 'Alarm.dart'; // 알림 화면
 import 'EditProfile.dart'; // 프로필 수정 화면
 import 'MyProfile.dart'; // 프로필 화면
 
-void main() {
-  runApp(MyApp());
-}
+// void main() {
+//   runApp(MyApp());
+// }
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: MainScreen(),
-    );
-  }
-}
+// class MyApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       home: MainScreen(user_id: user_id),
+//     );
+//   }
+// }
 
 class MainScreen extends StatefulWidget {
+  final String user_id;
+
+  MainScreen({required this.user_id});
+
   @override
   _MainScreenState createState() => _MainScreenState();
 }
@@ -175,13 +179,13 @@ class _MainScreenState extends State<MainScreen> {
       case 0:
         return Center(child: Text('홈 탭 내용', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)));
       case 1:
-        return Meeting(); // 정모 탭의 내용
+        return Meeting(user_id: widget.user_id); // 정모 탭의 내용
       case 2:
-        return EditScore(); // 점수기록 탭의 내용
+        return EditScore(user_id: widget.user_id); // 점수기록 탭의 내용
       case 3:
-        return MyScore(); // 내기록 탭의 내용
+        return MyScore(user_id: widget.user_id); // 내기록 탭의 내용
       case 4:
-        return Ranking(); // 랭킹 탭의 내용
+        return Ranking(user_id: widget.user_id); // 랭킹 탭의 내용
       default:
         return Center(child: Text('내용 없음', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)));
     }

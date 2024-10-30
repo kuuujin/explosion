@@ -262,6 +262,8 @@ import 'MainScreen.dart';
 
 
 class AddMeeting extends StatefulWidget {
+  final String user_id;
+  AddMeeting({required this.user_id});
   @override
   _AddMeetingState createState() => _AddMeetingState();
 }
@@ -309,6 +311,7 @@ class _AddMeetingState extends State<AddMeeting> {
     'place': place, // TextField에서 입력 받은 값으로 변경
     'join_cnt': selectedPeople.toString(),
     'pay' : pay,
+    'user_id' : widget.user_id,
     'images': base64Image, // Base64 인코딩된 이미지
   };
 
@@ -333,7 +336,7 @@ class _AddMeetingState extends State<AddMeeting> {
                   Navigator.of(context).pop(); // 다이얼로그 닫기
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => MainScreen()), //
+                    MaterialPageRoute(builder: (context) => MainScreen(user_id: widget.user_id)), //
                   );
                 },
               ),

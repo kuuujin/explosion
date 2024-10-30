@@ -45,13 +45,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (response.statusCode == 200) {
       // 로그인 성공 처리
+      final responseData = json.decode(response.body);
+      int user_id = responseData['user_id']; // user_id를 정수형으로 가져옴
+      String userid = user_id.toString(); // 문자열로 변환
       // 로그인 정보 저장
       await _storage.write(key: 'login_id', value: id);
       await _storage.write(key: 'password', value: password);
+      await _storage.write(key: 'user_id', value: userid);
 
       Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => MainScreen()),
+      MaterialPageRoute(builder: (context) => MainScreen(user_id: userid)),  
     );
   } else {
       // 로그인 실패 처리

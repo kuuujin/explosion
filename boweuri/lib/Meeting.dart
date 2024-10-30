@@ -3,6 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_application_1/addMeeting.dart';
 
 class Meeting extends StatelessWidget {
+  final String user_id;
+
+  Meeting({required this.user_id});
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,7 +49,7 @@ class Meeting extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AddMeeting()),
+                  MaterialPageRoute(builder: (context) => AddMeeting(user_id: user_id)),
                   );
                 },
                 child: Text('정모 일정 추가'),
