@@ -1,12 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class UserProfileService {
+  final String baseUrl = 'http://34.64.176.207:5000'; // Flask 서버 주소
+
+  Future<Map<String, dynamic>?> getUserProfile(String userId) async {
+    final response = await http.get(Uri.parse('$baseUrl/users/$userId'));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      // 오류 처리
+      print('Error: ${response.statusCode}');
+      return null;
+    }
+  }
+}
+
 
 class MyProfile extends StatefulWidget {
+  final String user_id; // user_id를 String형으로 지정
+
+  MyProfile({required this.user_id});
+  
   @override
   _MyProfileState createState() => _MyProfileState();
 }
 
 class _MyProfileState extends State<MyProfile> {
   bool _isNotificationsEnabled = true; // 알림 수신 상태
+  String _userName = ''; // 사용자 이름
+  String _userEmail = ''; // 사용자 이메일
+  String _profileImage = ''; // 사용자 프로필 이미지 URL
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile(widget.user_id);
+  }
+
+  Future<void> _fetchUserProfile(String userId) async {
+    UserProfileService userProfileService = UserProfileService();
+    Map<String, dynamic>? userProfile = await userProfileService.getUserProfile(userId);
+
+    if (userProfile != null) {
+      setState(() {
+        _userName = userProfile['name']; // API 응답에서 이름 가져오기
+        _userEmail = userProfile['email']; // API 응답에서 이메일 가져오기
+        _profileImage = userProfile['profile_image']; // API 응답에서 프로필 이미지 URL 가져오기
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,15 +73,15 @@ class _MyProfileState extends State<MyProfile> {
                 children: [
                   CircleAvatar(
                     radius: 40, // 프로필 이미지 크기
-                    backgroundImage: AssetImage('asset/images/보으링아이콘.png'), // 프로필 이미지
+                    backgroundImage: NetworkImage(_profileImage.isNotEmpty ? _profileImage : 'default_image_url'), // 프로필 이미지
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '이순신',
+                    _userName, // 동적으로 변경된 이름
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'General.Lee@gmail.com',
+                    _userEmail, // 동적으로 변경된 이메일
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
