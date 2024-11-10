@@ -193,7 +193,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Route _createRoute() {
   return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => MyProfile(),
+    pageBuilder: (context, animation, secondaryAnimation) => MyProfile(user_id: widget.user_id),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       const begin = Offset(1.0, 0.0); // 오른쪽에서 시작
       const end = Offset.zero; // 원래 위치로
