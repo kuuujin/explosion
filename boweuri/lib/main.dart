@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'SplashScreen.dart'; // 스플래시 화면 임포트
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
   runApp(MyApp());
 }
 

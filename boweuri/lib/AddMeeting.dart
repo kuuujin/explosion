@@ -309,7 +309,8 @@ class _AddMeetingState extends State<AddMeeting> {
     'date': '${selectedDate!.year}-${selectedDate!.month}-${selectedDate!.day}',
     'time': '${selectedTime!.hour}:${selectedTime!.minute}',
     'place': place, // TextField에서 입력 받은 값으로 변경
-    'join_cnt': selectedPeople.toString(),
+    'total': selectedPeople.toString(),
+    'join_cnt': 1,
     'pay' : pay,
     'user_id' : widget.user_id,
     'images': base64Image, // Base64 인코딩된 이미지
@@ -491,7 +492,7 @@ class _AddMeetingState extends State<AddMeeting> {
               DateTime? date = await showDatePicker(
                 context: context,
                 initialDate: selectedDate ?? DateTime.now(),
-                firstDate: DateTime(2000),
+                firstDate: DateTime.now(),
                 lastDate: DateTime(2101),
               );
               if (date != null && date != selectedDate) {
