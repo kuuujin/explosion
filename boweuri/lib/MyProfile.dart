@@ -32,7 +32,7 @@ class _MyProfileState extends State<MyProfile> {
   bool _isNotificationsEnabled = true; // 알림 수신 상태
   String _userName = ''; // 사용자 이름
   String _userEmail = ''; // 사용자 이메일
-  String _profileImage = ''; // 사용자 프로필 이미지 URL
+  String _profileImageUrl = ''; // 사용자 프로필 이미지 URL
 
   @override
   void initState() {
@@ -48,8 +48,23 @@ class _MyProfileState extends State<MyProfile> {
       setState(() {
         _userName = userProfile['name']; // API 응답에서 이름 가져오기
         _userEmail = userProfile['email']; // API 응답에서 이메일 가져오기
-        _profileImage = userProfile['profile_image']; // API 응답에서 프로필 이미지 URL 가져오기
       });
+
+      // 프로필 이미지 별도로 요청
+      _fetchProfileImage(userId);
+    }
+  }
+
+  Future<void> _fetchProfileImage(String userId) async {
+    final response = await http.get(Uri.parse('http://34.64.176.207:5000/users/$userId/image'));
+    
+    if (response.statusCode == 200) {
+      setState(() {
+        _profileImageUrl = 'http://34.64.176.207:5000/users/$userId/image'; // 프로필 이미지 URL 설정
+      });
+    } else {
+      // 오류 처리
+      print('Error fetching profile image: ${response.statusCode}');
     }
   }
 
@@ -72,8 +87,21 @@ class _MyProfileState extends State<MyProfile> {
               child: Column(
                 children: [
                   CircleAvatar(
-                    radius: 40, // 프로필 이미지 크기
-                    backgroundImage: NetworkImage(_profileImage.isNotEmpty ? _profileImage : 'default_image_url'), // 프로필 이미지
+                  radius: 40, // 프로필 이미지 크기
+                  backgroundImage: _profileImageUrl.isNotEmpty
+                      ? NetworkImage(_profileImageUrl) // 서버에서 가져온 이미지
+                      : null, // 이미지가 없을 경우 null 설정
+                ),
+                // 아이콘이 필요할 경우 Stack 사용
+                if (_profileImageUrl.isEmpty) // 이미지가 없을 때 아이콘 표시
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey[300], // 아이콘 배경색
+                    ),
+                    child: Icon(Icons.account_circle, size: 40, color: Colors.black), // 기본 아이콘
                   ),
                   SizedBox(height: 8),
                   Text(

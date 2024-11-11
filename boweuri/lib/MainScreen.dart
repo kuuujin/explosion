@@ -7,6 +7,8 @@ import 'Ranking.dart'; // 랭킹 탭의 내용을 위한 파일
 import 'Alarm.dart'; // 알림 화면
 import 'EditProfile.dart'; // 프로필 수정 화면
 import 'MyProfile.dart'; // 프로필 화면
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 // void main() {
 //   runApp(MyApp());
@@ -32,6 +34,34 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0; // 현재 선택된 탭의 인덱스
+  String? _profileImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfileImage(); // 프로필 이미지 가져오기
+  }
+
+  Future<void> _fetchProfileImage() async {
+    try {
+      final response = await http.get(Uri.parse('http://34.64.176.207:5000/users/${widget.user_id}/image'));
+      if (response.statusCode == 200) {
+        setState(() {
+          _profileImageUrl = 'http://34.64.176.207:5000/users/${widget.user_id}/image'; // 프로필 이미지 URL
+        });
+      } else {
+        // 오류 처리
+        setState(() {
+          _profileImageUrl = null;
+        });
+      }
+    } catch (e) {
+      // 오류 처리
+      setState(() {
+        _profileImageUrl = null;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +101,28 @@ class _MainScreenState extends State<MainScreen> {
                   ],
                 ),
                 GestureDetector(
-                  onTap: () {
-                      Navigator.of(context).push(_createRoute()); // 프로필 화면으로 전환
-                  },
-                  child: Icon(Icons.account_circle, size: 40), // 사용자 아이콘
-                ),
+  onTap: () {
+    Navigator.of(context).push(_createRoute()); // 프로필 화면으로 전환
+  },
+  child: ClipOval(
+  child: _profileImageUrl != null
+      ? Image.network(
+          _profileImageUrl!,
+          width: 40,
+          height: 40,
+          fit: BoxFit.cover,
+        )
+      : Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey, // 기본 색상
+          ),
+          child: Icon(Icons.person, color: Colors.white), // 기본 아이콘
+        ),
+),
+),
               ],
             ),
           ),
