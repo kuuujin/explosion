@@ -25,58 +25,124 @@ class _EditScoreState extends State<EditScore> {
     );
   }
 
-  void _onButtonPressed(int value) {
+void _onButtonPressed(int value) {
     if (isGameFinished) {
-      _showSnackbar("해당 게임 점수 기록은 끝났습니다.");
-      return;
+        _showSnackbar("해당 게임 점수 기록은 끝났습니다.");
+        return;
     }
 
     setState(() {
-      if (isFirstRoll) {
-        frames[currentFrame][0] = value == 10 ? "X" : value.toString();
-        firstRollScore = value; // 첫 번째 투구 점수 저장
-        if (value < 10) {
-          isFirstRoll = false; // 두 번째 롤로 전환
+        if (currentFrame < 9) {
+            // 9 프레임까지
+            if (isFirstRoll) {
+                frames[currentFrame][0] = value == 10 ? "X" : value.toString();
+                firstRollScore = value; // 첫 번째 투구 점수 저장
+                if (value < 10) {
+                    isFirstRoll = false; // 두 번째 롤로 전환
+                } else {
+                    currentFrame++; // 다음 프레임으로 전환
+                    isFirstRoll = true; // 다음에는 첫 번째 롤로 돌아가기
+                }
+            } else {
+                int secondRollScore = value;
+                // 두 번째 투구 점수 제한
+                if (firstRollScore + secondRollScore > 10) {
+                    _showSnackbar("두 번째 투구 점수는 첫 번째 투구와 합쳐서 10을 넘을 수 없습니다.");
+                    return;
+                }
+                
+                // 두 번째 투구가 스트라이크인 경우
+                if (secondRollScore == 10) {
+                    frames[currentFrame][1] = "X"; // 두 번째 투구도 X로 기록
+                } else {
+                    frames[currentFrame][1] = (firstRollScore + secondRollScore == 10)
+                        ? "/"
+                        : secondRollScore.toString();
+                }
+
+                currentFrame++; // 다음 프레임으로 전환
+                isFirstRoll = true; // 다음에는 첫 번째 롤로 돌아가기
+                firstRollScore = 0; // 첫 번째 투구 점수 초기화
+            }
         } else {
-          if (currentFrame < 9) {
-            currentFrame++; // 다음 프레임으로 전환
-          }
+            // 10 프레임
+            if (isFirstRoll) {
+                frames[currentFrame][0] = value == 10 ? "X" : value.toString();
+                firstRollScore = value; // 첫 번째 투구 점수 저장
+                isFirstRoll = false; // 두 번째 롤로 전환
+            } else {
+                int secondRollScore = value;
+
+                // 첫 번째 투구가 스트라이크인 경우
+                if (frames[currentFrame][0] == "X") {
+                    // 두 번째 투구가 스트라이크인 경우
+                    if (secondRollScore == 10) {
+                        frames[currentFrame][1] = "X"; // 두 번째 투구도 X로 기록
+                    } else {
+                        frames[currentFrame][1] = secondRollScore.toString();
+                    }
+                    isThirdRollAllowed = true; // 세 번째 투구 허용
+                    isFirstRoll = true; // 다음에는 첫 번째 롤로 돌아가기
+                    firstRollScore = 0; // 첫 번째 투구 점수 초기화
+                } else {
+                    // 첫 번째 투구가 스트라이크가 아닌 경우
+                    if (firstRollScore + secondRollScore > 10) {
+                        _showSnackbar("두 번째 투구 점수는 첫 번째 투구와 합쳐서 10을 넘을 수 없습니다.");
+                        return;
+                    }
+                    frames[currentFrame][1] = (firstRollScore + secondRollScore == 10)
+                        ? "/"
+                        : secondRollScore.toString();
+                    
+                    // 세 번째 투구 허용 여부 결정
+                    if (firstRollScore + secondRollScore == 10) {
+                        isThirdRollAllowed = true; // 세 번째 투구 허용
+                    } else {
+                        isThirdRollAllowed = false; // 세 번째 투구 허용 안 함
+                    }
+                    
+                    isFirstRoll = true; // 다음에는 첫 번째 롤로 돌아가기
+                    firstRollScore = 0; // 첫 번째 투구 점수 초기화
+                }
+            }
         }
-      } else {
-        int secondRollScore = value;
-        if (firstRollScore + secondRollScore > 10) return;
 
-        frames[currentFrame][1] = (firstRollScore + secondRollScore == 10) ? "/" : secondRollScore.toString();
-
-        // 10프레임에서 세 번째 투구를 허용할지 결정
-        if (currentFrame == 9) {
-          isThirdRollAllowed = (firstRollScore == 10 || secondRollScore == 10);
+        // 10프레임에서 세 번째 투구 처리
+        if (currentFrame == 9 && isThirdRollAllowed && !isFirstRoll) {
+            frames[9][2] = value.toString(); // 10프레임의 세 번째 투구 점수 기록
+            // 세 번째 투구가 X일 때 처리
+            if (frames[9][2] == "10") {
+                frames[9][2] = "X"; // 세 번째 투구가 10으로 입력된 경우 X로 변경
+            }
+            isThirdRollAllowed = false; // 세 번째 투구 허용 상태를 변경
+            isGameFinished = true; // 게임 종료
+            _showSnackbar("해당 게임 점수 기록은 끝났습니다.");
         }
-
-        currentFrame++; // 다음 프레임으로 전환
-        isFirstRoll = true; // 다음에는 첫 번째 롤로 돌아가기
-        firstRollScore = 0; // 첫 번째 투구 점수 초기화
-      }
-
-      // 10프레임에서 세 번째 투구 처리
-      if (currentFrame == 10) {
-        if (isThirdRollAllowed) {
-          isGameFinished = false; // 세 번째 투구를 받을 수 있는 상태
-        } else {
-          isGameFinished = true; // 세 번째 투구를 받을 수 없는 경우 게임 종료
-          _showSnackbar("해당 게임 점수 기록은 끝났습니다.");
-        }
-      }
     });
-  }
+}
 
-  void _onThirdRollPressed(int value) {
-    if (isThirdRollAllowed) {
-      frames[9][2] = value.toString(); // 10프레임에 세 번째 투구 점수 기록
-      isThirdRollAllowed = false; // 세 번째 투구 허용 상태를 변경
-      isGameFinished = true; // 게임 종료
-      _showSnackbar("해당 게임 점수 기록은 끝났습니다.");
-      setState(() {}); // 화면 업데이트
+  // 점수 버튼을 생성하는 메소드
+  List<int> _getAvailableScores() {
+    if (currentFrame < 9) {
+      if (isFirstRoll) {
+        return List.generate(11, (index) => index); // 0~10 점수 선택
+      } else {
+        return List.generate(11 - firstRollScore, (index) => index); // 남은 점수
+      }
+    } else {
+      // 10 프레임
+      if (isFirstRoll) {
+        return List.generate(11, (index) => index); // 0~10 점수 선택
+      } else {
+        // 두 번째 투구 후 점수 선택
+        if (frames[currentFrame][0] == "X") {
+          return List.generate(
+              11, (index) => index); // 두 번째 투구에서 0~10 점수 선택 (스트라이크인 경우)
+        } else {
+          return List.generate(
+              11 - firstRollScore, (index) => index); // 첫 투구 점수에 따른 제한
+        }
+      }
     }
   }
 
@@ -124,14 +190,6 @@ class _EditScoreState extends State<EditScore> {
     }
   }
 
-  List<int> _getAvailableScores() {
-    if (isFirstRoll) {
-      return List.generate(11, (index) => index);
-    } else {
-      return List.generate(11 - firstRollScore, (index) => index);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,7 +214,8 @@ class _EditScoreState extends State<EditScore> {
                         children: [
                           Text(
                             "${selectedDate.toLocal()}".split(' ')[0],
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           Icon(Icons.calendar_today),
                         ],
@@ -180,7 +239,8 @@ class _EditScoreState extends State<EditScore> {
                               selectedGameNumber = newValue!;
                             });
                           },
-                          items: List.generate(30, (index) => index + 1).map((int value) {
+                          items: List.generate(30, (index) => index + 1)
+                              .map((int value) {
                             return DropdownMenuItem<int>(
                               value: value,
                               child: Text(value.toString()),
@@ -189,7 +249,9 @@ class _EditScoreState extends State<EditScore> {
                         ),
                       ),
                       SizedBox(width: 5),
-                      Text('번째 게임', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('번째 게임',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
@@ -215,15 +277,6 @@ class _EditScoreState extends State<EditScore> {
                 }).toList(),
               ),
 
-              // 세 번째 투구 버튼 (10프레임에서만)
-              if (currentFrame == 9 && isThirdRollAllowed) // 세 번째 투구 점수가 허용된 경우
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(11, (index) {
-                    return _buildButton(index, isThirdRoll: true);
-                  }),
-                ),
-
               SizedBox(height: 20),
 
               // 백스페이스 버튼 (아이콘으로 대체)
@@ -245,7 +298,7 @@ class _EditScoreState extends State<EditScore> {
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.blue,
-                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                   side: BorderSide(color: Colors.blue, width: 1),
                 ),
               ),
@@ -290,12 +343,18 @@ class _EditScoreState extends State<EditScore> {
         child: ElevatedButton(
           onPressed: () {
             if (isThirdRoll) {
-              _onThirdRollPressed(value);
+              // 10프레임에서 세 번째 투구 처리
+              if (isThirdRollAllowed) {
+                frames[9][2] = value.toString(); // 10프레임의 세 번째 투구 점수 기록
+                isThirdRollAllowed = false; // 세 번째 투구 허용 상태를 변경
+                isGameFinished = true; // 게임 종료
+                _showSnackbar("해당 게임 점수 기록은 끝났습니다.");
+              }
             } else {
               _onButtonPressed(value);
             }
           },
-          child: value == 10 
+          child: value == 10
               ? Text('X', style: TextStyle(fontSize: 14)) // 스트라이크
               : Text(value.toString(), style: TextStyle(fontSize: 14)), // 점수
           style: ElevatedButton.styleFrom(
@@ -344,7 +403,8 @@ class _EditScoreState extends State<EditScore> {
               color: Color(0xFFBBBB9D),
               border: Border(
                 left: BorderSide(color: Colors.black),
-                right: BorderSide(color: isLast ? Colors.black : Colors.transparent),
+                right: BorderSide(
+                    color: isLast ? Colors.black : Colors.transparent),
                 top: BorderSide(color: Colors.black),
                 bottom: BorderSide(color: Colors.black),
               ),
@@ -352,7 +412,10 @@ class _EditScoreState extends State<EditScore> {
             child: Center(
               child: Text(
                 frameNumber.toString(),
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -364,7 +427,8 @@ class _EditScoreState extends State<EditScore> {
               color: Color(0xFFFAFAD2),
               border: Border(
                 left: BorderSide(color: Colors.black),
-                right: BorderSide(color: isLast ? Colors.black : Colors.transparent),
+                right: BorderSide(
+                    color: isLast ? Colors.black : Colors.transparent),
                 bottom: BorderSide(color: Colors.black),
                 top: BorderSide(color: Colors.transparent),
               ),
@@ -381,7 +445,8 @@ class _EditScoreState extends State<EditScore> {
                     child: Center(
                       child: Text(
                         frames[frameNumber - 1][0], // 첫 번째 투구 점수
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -396,7 +461,8 @@ class _EditScoreState extends State<EditScore> {
                     child: Center(
                       child: Text(
                         frames[frameNumber - 1][1], // 두 번째 투구 점수
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -412,7 +478,8 @@ class _EditScoreState extends State<EditScore> {
                       child: Center(
                         child: Text(
                           frames[frameNumber - 1][2], // 세 번째 투구 점수
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -425,4 +492,3 @@ class _EditScoreState extends State<EditScore> {
     );
   }
 }
-
