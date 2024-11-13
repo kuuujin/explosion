@@ -145,8 +145,7 @@ int _getScoreForRoll(int frameIndex, int rollIndex) {
                         frames[9][1] = 'X'; // 두 번째 투구가 스트라이크
                         isSecondRoll = false;
                         isThirdRollAllowed = true; // 세 번째 투구 허용
-                    } else if (totalPins == 10) {
-                        frames[9][1] = '/'; // 스페어 처리
+                    } else if (secondRollScore != 10){
                         isSecondRoll = false;
                         isThirdRollAllowed = true; // 세 번째 투구 허용
                     } else {
@@ -165,6 +164,9 @@ int _getScoreForRoll(int frameIndex, int rollIndex) {
             } else if (isThirdRollAllowed) {
                 // 세 번째 투구 입력
                 frames[9][2] = value == 10 ? 'X' : value.toString(); // 10번째 프레임의 세 번째 투구를 명확히 입력
+                thirdRollScore = value;
+                int totalPins = secondRollScore + thirdRollScore;
+                if(totalPins == 10) {frames[9][2] = '/';}
                 isGameFinished = true; // 세 번째 투구 후 게임 종료
             }
         }
@@ -206,7 +208,10 @@ int _getScoreForRoll(int frameIndex, int rollIndex) {
       }
     }       // 세 번째 투구 처리
       if (isThirdRollAllowed) {
+        if(secondRollScore == 10){
         return List.generate(11 , (index) => index); 
+        }
+        else {return List.generate(11 - secondRollScore, (index) => index);}
       }
   }
   return []; // 기본적으로 빈 리스트 반환
