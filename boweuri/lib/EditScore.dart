@@ -10,6 +10,8 @@ class EditScore extends StatefulWidget {
 }
 
 class _EditScoreState extends State<EditScore> {
+  List<int> frameScores = List.filled(10, 0);
+
   DateTime selectedDate = DateTime.now();
   int selectedGameNumber = 1;
   List<List<String>> frames = List.generate(10, (index) => ["", "", ""]);
@@ -28,198 +30,222 @@ class _EditScoreState extends State<EditScore> {
     );
   }
 
- int _calculateScore() {
+  int _calculateScore() {
     int totalScore = 0; // 전체 점수 초기화
 
     for (int frameIndex = 0; frameIndex < 10; frameIndex++) {
-        int firstRoll = _getScoreForRoll(frameIndex, 0);
-        int secondRoll = _getScoreForRoll(frameIndex, 1);
-        int frameScore = 0; // 각 프레임의 점수 초기화
+      int firstRoll = _getScoreForRoll(frameIndex, 0);
+      int secondRoll = _getScoreForRoll(frameIndex, 1);
+      int frameScore = 0; // 각 프레임의 점수 초기화
 
-        // 10번째 프레임이 아닐 경우
-        if (frameIndex < 9) {
-            // 스트라이크 처리
-            if (firstRoll == 10) { // 스트라이크
-                frameScore = firstRoll; // 기본 점수 10점
-                frameScore += _getScoreForRoll(frameIndex + 1, 0); // 다음 프레임 첫 번째 투구 점수
-                frameScore += _getScoreForRoll(frameIndex + 1, 1); // 다음 프레임 두 번째 투구 점수
-                if (_getScoreForRoll(frameIndex + 1, 0) == 10) { // 다음 프레임도 스트라이크인 경우
-                    frameScore += _getScoreForRoll(frameIndex + 2, 0); // 다음 다음 프레임 첫 번째 투구 점수 추가
-                }
-            }
-            // 스페어 처리
-            else if (firstRoll + secondRoll == 10) { // 스페어
-                frameScore = firstRoll + secondRoll; // 기본 점수
-                frameScore += _getScoreForRoll(frameIndex + 1, 0); // 다음 프레임 첫 번째 투구 점수
-            }
-            // 일반 점수 처리
-            else {
-                frameScore = firstRoll + secondRoll; // 일반 점수
-            }
-        } else {
-            // 10번째 프레임 처리
-            int thirdRoll = _getScoreForRoll(frameIndex, 2); // 세 번째 투구 점수
-            frameScore = firstRoll + secondRoll + thirdRoll; // 10번째 프레임의 총 점수
+      // 10번째 프레임이 아닐 경우
+      if (frameIndex < 9) {
+        // 스트라이크 처리
+        if (firstRoll == 10) {
+          // 스트라이크
+          frameScore = 10; // 기본 점수 10점
+          frameScore +=
+              _getScoreForRoll(frameIndex + 1, 0); // 다음 프레임 첫 번째 투구 점수
+          frameScore +=
+              _getScoreForRoll(frameIndex + 1, 1); // 다음 프레임 두 번째 투구 점수
+
+          // 다음 프레임이 스트라이크인 경우
+          if (_getScoreForRoll(frameIndex + 1, 0) == 10) {
+            frameScore +=
+                _getScoreForRoll(frameIndex + 2, 0); // 다음 다음 프레임 첫 번째 투구 점수 추가
+          }
         }
+        // 스페어 처리
+        else if (firstRoll + secondRoll == 10) {
+          // 스페어
+          frameScore = 10; // 기본 점수
+          frameScore +=
+              _getScoreForRoll(frameIndex + 1, 0); // 다음 프레임 첫 번째 투구 점수
+        }
+        // 일반 점수 처리
+        else {
+          frameScore = firstRoll + secondRoll; // 일반 점수
+        }
+      } else {
+        // 10번째 프레임 처리
+        int thirdRoll = _getScoreForRoll(frameIndex, 2); // 세 번째 투구 점수
+        frameScore = firstRoll + secondRoll + thirdRoll; // 10번째 프레임의 총 점수
+      }
 
-        totalScore += frameScore; // 전체 점수에 더하기
+      totalScore += frameScore; // 전체 점수에 더하기
 
-        // 각 프레임 점수 출력
-        print("프레임 ${frameIndex + 1} 점수: $frameScore");
+      // 각 프레임 점수 출력
+      frameScores[frameIndex] = frameScore;
+
+      print("프레임 ${frameIndex + 1} 점수: $frameScore");
     }
 
     print("최종 점수: $totalScore"); // 최종 점수 출력
     return totalScore; // 최종 점수 반환
-}
+  }
 
 // 주어진 프레임과 투구 인덱스에 따라 점수를 반환하는 헬퍼 메서드
-int _getScoreForRoll(int frameIndex, int rollIndex) {
+  int _getScoreForRoll(int frameIndex, int rollIndex) {
     if (frameIndex < 10) {
-        String score = frames[frameIndex][rollIndex];
-
-        if (score == 'X') {
-            return 10; // 스트라이크
-        } else if (score == '/') {
-            return 10 - _getScoreForRoll(frameIndex, 0); // 스페어는 첫 번째 투구 점수로 계산
-        } else if (score.isNotEmpty) {
-            return int.parse(score); // 점수 반환
-        }
+      String score = frames[frameIndex][rollIndex];
+      if (score == 'X') {
+        return 10; // 스트라이크
+      } else if (frameIndex == 10 && score == '/') {
+        return 10;
+      } else if (score == '/') {
+        return 10 - _getScoreForRoll(frameIndex, 0); // 스페어는 첫 번째 투구 점수로 계산
+      } else if (score.isNotEmpty) {
+        return int.parse(score); // 점수 반환
+      }
     }
+
     return 0; // 잘못된 인덱스거나 점수가 없을 경우
-}
+  }
 
   void _onButtonPressed(int value) {
     if (isGameFinished) {
-        _showSnackbar("해당 게임 점수 기록은 끝났습니다.");
-        return;
+      _showSnackbar("해당 게임 점수 기록은 끝났습니다.");
+      return;
     }
 
     setState(() {
-        // 현재 프레임의 점수를 기록
-        if (currentFrame < 9) {
-            if (isFirstRoll) {
-                // 첫 번째 투구
-                frames[currentFrame][0] = value == 10 ? 'X' : value.toString();
-                firstRollScore = value;
+      // 현재 프레임의 점수를 기록
+      if (currentFrame < 9) {
+        if (isFirstRoll) {
+          // 첫 번째 투구
+          frames[currentFrame][0] = value == 10 ? 'X' : value.toString();
+          firstRollScore = value;
 
-                // 스트라이크인 경우
-                if (value == 10) {
-                    isFirstRoll = true; // 다음 프레임으로 넘어갈 준비
-                    currentFrame++;
-                    return;
-                } else {
-                    isFirstRoll = false; // 두 번째 투구로 넘어감
-                }
+          // 스트라이크인 경우
+          if (value == 10) {
+            isFirstRoll = true; // 다음 프레임으로 넘어갈 준비
+            currentFrame++;
+            return;
+          } else {
+            isFirstRoll = false; // 두 번째 투구로 넘어감
+          }
+        } else {
+          // 두 번째 투구
+          frames[currentFrame][1] = value.toString();
+          int totalPins = firstRollScore + value; // 두 투구의 총 점수 계산
+
+          // 스페어인 경우
+          if (totalPins == 10) {
+            frames[currentFrame][1] = '/'; // 두 번째 투구에 '/' 입력
+            isThirdRollAllowed = true; // 추가 투구 허용
+          }
+
+          // 다음 프레임으로 넘어감
+          isFirstRoll = true;
+          currentFrame++;
+        }
+      } else if (currentFrame == 9) {
+        // 10번째 프레임 처리
+        if (isFirstRoll) {
+          // 첫 번째 투구
+          frames[9][0] = value == 10 ? 'X' : value.toString();
+          firstRollScore = value;
+          isSecondRoll = true; // 두 번째 투구로 넘어감
+          isFirstRoll = false; // 첫 번째 투구가 끝났으므로 isFirstRoll을 false로 설정
+        } else if (isSecondRoll) {
+          // 두 번째 투구
+          frames[9][1] = value == 10 ? 'X' : value.toString();
+          secondRollScore = value;
+          int totalPins = firstRollScore + secondRollScore;
+
+          // 첫 번째 투구가 스트라이크인 경우
+          if (firstRollScore == 10) {
+            if (secondRollScore == 10) {
+              frames[9][1] = 'X'; // 두 번째 투구가 스트라이크
+              isSecondRoll = false;
+              isThirdRollAllowed = true; // 세 번째 투구 허용
+            } else if (secondRollScore != 10) {
+              isSecondRoll = false;
+              isThirdRollAllowed = true; // 세 번째 투구 허용
             } else {
-                // 두 번째 투구
-                frames[currentFrame][1] = value.toString();
-                int totalPins = firstRollScore + value; // 두 투구의 총 점수 계산
-
-                // 스페어인 경우
-                if (totalPins == 10) {
-                    frames[currentFrame][1] = '/'; // 두 번째 투구에 '/' 입력
-                    isThirdRollAllowed = true; // 추가 투구 허용
-                }
-
-                // 다음 프레임으로 넘어감
-                isFirstRoll = true;
-                currentFrame++;
+              isGameFinished = true; // 게임 종료
             }
-        } else if (currentFrame == 9) {
-            // 10번째 프레임 처리
-            if (isFirstRoll) {
-                // 첫 번째 투구
-                frames[9][0] = value == 10 ? 'X' : value.toString();
-                firstRollScore = value;
-                isSecondRoll = true; // 두 번째 투구로 넘어감
-                isFirstRoll = false; // 첫 번째 투구가 끝났으므로 isFirstRoll을 false로 설정
-            } else if (isSecondRoll) {
-                // 두 번째 투구
-                frames[9][1] = value == 10 ? 'X' : value.toString();
-                secondRollScore = value;
-                int totalPins = firstRollScore + secondRollScore;
-
-                // 첫 번째 투구가 스트라이크인 경우
-                if (firstRollScore == 10) {
-                    if (secondRollScore == 10) {
-                        frames[9][1] = 'X'; // 두 번째 투구가 스트라이크
-                        isSecondRoll = false;
-                        isThirdRollAllowed = true; // 세 번째 투구 허용
-                    } else if (secondRollScore != 10){
-                        isSecondRoll = false;
-                        isThirdRollAllowed = true; // 세 번째 투구 허용
-                    } else {
-                        isGameFinished = true; // 게임 종료
-                    }
-                } else {
-                    // 첫 번째 투구가 스트라이크가 아닌 경우
-                    if (totalPins == 10) {
-                        frames[9][1] = '/'; // 스페어 처리
-                        isSecondRoll = false;
-                        isThirdRollAllowed = true; // 세 번째 투구 허용
-                    } else {
-                        isGameFinished = true; // 스페어가 아닌 경우 게임 종료
-                    }
-                }
-            } else if (isThirdRollAllowed) {
-                // 세 번째 투구 입력
-                frames[9][2] = value == 10 ? 'X' : value.toString(); // 10번째 프레임의 세 번째 투구를 명확히 입력
-                thirdRollScore = value;
-                int totalPins = secondRollScore + thirdRollScore;
-                if(totalPins == 10) {frames[9][2] = '/';}
-                isGameFinished = true; // 세 번째 투구 후 게임 종료
+          } else {
+            // 첫 번째 투구가 스트라이크가 아닌 경우
+            if (totalPins == 10) {
+              frames[9][1] = '/';
+              isSecondRoll = false;
+              isThirdRollAllowed = true; // 세 번째 투구 허용
+            } else {
+              isGameFinished = true; // 스페어가 아닌 경우 게임 종료
             }
-        }
+          }
+        } else if (isThirdRollAllowed) {
+          // 세 번째 투구 입력
+          frames[9][2] =
+              value == 10 ? 'X' : value.toString(); // 10번째 프레임의 세 번째 투구를 명확히 입력
+          thirdRollScore = value;
+          int totalPins = secondRollScore + thirdRollScore;
 
-        // 게임 종료 처리
-        if (currentFrame >= 10) {
-            isGameFinished = true; // 마지막 프레임이므로 게임 종료
+          if (totalPins == 10) {
+            frames[9][2] = value.toString();
+          }
+          isGameFinished = true; // 세 번째 투구 후 게임 종료
         }
+      }
 
-        // 게임이 종료된 후 총점 계산 및 출력
-        if (isGameFinished) {
-            int finalScore = _calculateScore(); // 총점 계산
-            print("최종 점수: $finalScore"); // 총점 출력
-        }
+      // 게임 종료 처리
+      if (currentFrame >= 10) {
+        isGameFinished = true; // 마지막 프레임이므로 게임 종료
+      }
+
+      // 게임이 종료된 후 총점 계산 및 출력
+      if (isGameFinished) {
+        int finalScore = _calculateScore(); // 총점 계산
+        print("최종 점수: $finalScore"); // 총점 출력
+      }
     });
-}
+  }
 
- List<int> _getAvailableScores() {
-  if (currentFrame < 9) {
-    // 1~9 프레임
-    if (isFirstRoll) {
-      return List.generate(11, (index) => index); // 0~10 점수 선택
-    } else {
-      return List.generate(11 - firstRollScore, (index) => index); // 남은 점수
-    }
-  } else {
-    // 10번째 프레임
-    if (isFirstRoll) {
-      // 첫 번째 투구
-      return List.generate(11, (index) => index); // 0~10 점수 선택
-    } else if (isSecondRoll) {
-      // 두 번째 투구
-      if (firstRollScore == 10) {
-        // 첫 번째 투구가 스트라이크인 경우
-        return List.generate(11, (index) => index); // 두 번째 투구는 0~10 선택 가능
+  List<int> _getAvailableScores() {
+    if (currentFrame < 9) {
+      // 1~9 프레임
+      if (isFirstRoll) {
+        return List.generate(11, (index) => index); // 0~10 점수 선택
       } else {
-        // 첫 번째 투구가 스트라이크가 아닐 경우
         return List.generate(11 - firstRollScore, (index) => index); // 남은 점수
       }
-    }       // 세 번째 투구 처리
-      if (isThirdRollAllowed) {
-        if(secondRollScore == 10){
-        return List.generate(11 , (index) => index); 
+    } else {
+      // 10번째 프레임
+      if (isFirstRoll) {
+        // 첫 번째 투구
+        return List.generate(11, (index) => index); // 0~10 점수 선택
+      } else if (isSecondRoll) {
+        // 두 번째 투구
+        if (firstRollScore == 10) {
+          // 첫 번째 투구가 스트라이크인 경우
+          return List.generate(11, (index) => index); // 두 번째 투구는 0~10 선택 가능
+        } else {
+          // 첫 번째 투구가 스트라이크가 아닐 경우
+          return List.generate(11 - firstRollScore, (index) => index); // 남은 점수
         }
-        else {return List.generate(11 - secondRollScore, (index) => index);}
+      } // 세 번째 투구 처리
+      if (isThirdRollAllowed) {
+        if (secondRollScore == 10) {
+          return List.generate(11, (index) => index);
+        } else if (firstRollScore + secondRollScore == 10) {
+          return List.generate(11, (index) => index);
+        } else {
+          return List.generate(11 - secondRollScore, (index) => index);
+        }
       }
+    }
+    return []; // 기본적으로 빈 리스트 반환
   }
-  return []; // 기본적으로 빈 리스트 반환
-}
 
   void _backspace() {
     setState(() {
       if (currentFrame > 0) {
+        if (currentFrame == 9 && isThirdRollAllowed) {
+          frames[9][2] = ""; // 세 번째 롤 비우기
+          isThirdRollAllowed = false; // 세 번째 롤 허용 상태 변경
+          return; // 더 이상 진행하지 않음
+        }
         if (!isFirstRoll && frames[currentFrame][1] != "") {
           frames[currentFrame][1] = ""; // 두 번째 롤 비우기
           isFirstRoll = true; // 첫 번째 롤로 돌아감
@@ -227,11 +253,14 @@ int _getScoreForRoll(int frameIndex, int rollIndex) {
           frames[currentFrame][0] = ""; // 첫 번째 롤 비우기
           isFirstRoll = true; // 첫 번째 롤로 돌아감
         } else {
-          currentFrame--;
+
+
+          currentFrame--; // 이전 프레임으로 이동
           frames[currentFrame][1] = ""; // 이전 프레임의 두 번째 롤 비우기
           isFirstRoll = false; // 두 번째 롤로 전환
         }
       }
+      frameScores[currentFrame] = 0;
     });
   }
 
@@ -244,6 +273,7 @@ int _getScoreForRoll(int frameIndex, int rollIndex) {
       isThirdRollAllowed = false; // 세 번째 투구 허용 상태 초기화
       isGameFinished = false; // 게임 종료 상태 초기화
       isSecondRoll = false;
+      frameScores = List.filled(10, 0);
     });
   }
 
@@ -322,7 +352,7 @@ int _getScoreForRoll(int frameIndex, int rollIndex) {
                       SizedBox(width: 5),
                       Text('번째 게임',
                           style: TextStyle(
-                              fontSize: 16,fontWeight: FontWeight.bold)),
+                              fontSize: 16, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
@@ -339,7 +369,7 @@ int _getScoreForRoll(int frameIndex, int rollIndex) {
                 ),
               ),
               SizedBox(height: 30),
-              
+
               // 점수 버튼
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -452,7 +482,10 @@ int _getScoreForRoll(int frameIndex, int rollIndex) {
   }
 
   // 각 프레임을 생성하는 메소드
+// 각 프레임을 생성하는 메소드
   Widget _buildFrame(int frameNumber, {bool isLast = false}) {
+    int cumulativeScoreForFrame =
+        frameScores.sublist(0, frameNumber).reduce((a, b) => a + b);
     return Container(
       child: Column(
         children: [
@@ -545,6 +578,26 @@ int _getScoreForRoll(int frameIndex, int rollIndex) {
                       ),
                     ),
                   ),
+                // 프레임 점수 표시
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 30,
+                    child: Center(
+                      child: Text(
+                        cumulativeScoreForFrame > 0
+                            ? cumulativeScoreForFrame.toString()
+                            : '', // 프레임 점수
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
