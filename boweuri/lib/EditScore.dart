@@ -11,7 +11,7 @@ class EditScore extends StatefulWidget {
 
 class _EditScoreState extends State<EditScore> {
   List<int> frameScores = List.filled(10, 0);
-
+  List<int> existScores = List.filled(10, 0);
   DateTime selectedDate = DateTime.now();
   int selectedGameNumber = 1;
   List<List<String>> frames = List.generate(10, (index) => ["", "", ""]);
@@ -27,6 +27,33 @@ class _EditScoreState extends State<EditScore> {
   void _showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+
+  void _showResetDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('리셋'),
+          content: Text('해당 게임 기록을 리셋하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // 다이얼로그 닫기
+              },
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () {
+                _refreshScores(); // 점수 리프레시 실행
+                Navigator.of(context).pop(); // 다이얼로그 닫기
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -79,9 +106,10 @@ class _EditScoreState extends State<EditScore> {
 
       print("프레임 ${frameIndex + 1} 점수: $frameScore");
     }
-
-    print("최종 점수: $totalScore"); // 최종 점수 출력
+    existScores[0] > 0 ? totalScore += existScores[0] : totalScore;
     print("리스트 내용${frames}");
+    print("totalScore값은${totalScore}");
+
     return totalScore; // 최종 점수 반환
   }
 
@@ -91,20 +119,12 @@ class _EditScoreState extends State<EditScore> {
       String score = frames[frameIndex][rollIndex];
       if (score == 'X') {
         return 10; // 스트라이크
-      } else if (frameIndex == 10 && score == '/') {
-        return 10 - _getScoreForRoll(9, 1);
-      } else if (frameIndex==10 && (10 - _getScoreForRoll(9, 2)).toString() == frames[9][2] ){
-        print('asdf');
-        return 10 - _getScoreForRoll(9, 2);
-      } 
-      else if (score == '/') {
-        print('123');
+      } else if (score == '/') {
         return 10 - _getScoreForRoll(frameIndex, 0); // 스페어는 첫 번째 투구 점수로 계산
       } else if (score.isNotEmpty) {
         return int.parse(score); // 점수 반환
       }
     }
-
     return 0; // 잘못된 인덱스거나 점수가 없을 경우
   }
 
@@ -188,11 +208,11 @@ class _EditScoreState extends State<EditScore> {
           thirdRollScore = value;
           int totalPins = secondRollScore + thirdRollScore;
 
-          if (firstRollScore == 10 && totalPins == 10) {
+          if (frames[9][0] == 'X' && totalPins == 10) {
+            print('asss');
+            existScores[0] = value;
+            print(existScores[0]);
             frames[9][2] = '/';
-            print(int.parse(frames[9][2]));
-          } else {
-            frames[9][2] = value.toString();
           }
           isGameFinished = true; // 세 번째 투구 후 게임 종료
         }
@@ -205,7 +225,7 @@ class _EditScoreState extends State<EditScore> {
 
       // 게임이 종료된 후 총점 계산 및 출력
       if (isGameFinished) {
-        int finalScore = _calculateScore(); // 총점 계산
+        int finalScore = _calculateScore();
         print("최종 점수: $finalScore"); // 총점 출력
       }
     });
@@ -281,6 +301,7 @@ class _EditScoreState extends State<EditScore> {
       isGameFinished = false; // 게임 종료 상태 초기화
       isSecondRoll = false;
       frameScores = List.filled(10, 0);
+      existScores = List.filled(10, 0);
     });
   }
 
@@ -395,29 +416,37 @@ class _EditScoreState extends State<EditScore> {
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.red,
                   padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  fixedSize: Size(500, 30),
                   side: BorderSide(color: Colors.red, width: 1),
                 ),
               ),
-
+              SizedBox(height: 20),
               // 리프레시 버튼 (아이콘으로 대체)
               ElevatedButton(
-                onPressed: _refreshScores,
+                onPressed: () {
+                  _showResetDialog(); // 리셋 다이얼로그 표시
+                },
                 child: Icon(Icons.refresh, size: 24),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.blue,
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  fixedSize: Size(500, 30), 
                   side: BorderSide(color: Colors.blue, width: 1),
                 ),
               ),
 
-              SizedBox(height: 50),
+
+
+              SizedBox(height: 40),
 
               // 기록 테이블
               buildScoreFrames(),
 
               SizedBox(height: 50),
 
+              buildCustomFrames(),
+
+              SizedBox(height: 40),
               // 점수 기록하기 버튼
               ElevatedButton(
                 onPressed: () {
@@ -488,11 +517,12 @@ class _EditScoreState extends State<EditScore> {
     );
   }
 
-  // 각 프레임을 생성하는 메소드
-// 각 프레임을 생성하는 메소드
   Widget _buildFrame(int frameNumber, {bool isLast = false}) {
     int cumulativeScoreForFrame =
         frameScores.sublist(0, frameNumber).reduce((a, b) => a + b);
+    if (frameNumber == 10 && existScores[0] > 0) {
+      cumulativeScoreForFrame += existScores[0];
+    }
     return Container(
       child: Column(
         children: [
@@ -612,4 +642,85 @@ class _EditScoreState extends State<EditScore> {
       ),
     );
   }
+  Widget buildCustomFrames() {
+    int strikeCount = 0; // 스트라이크 개수
+    int spareCount = 0; // 스페어 개수
+    int total = frameScores.sublist(0, 10).reduce((a, b) => a + b);
+    total = existScores[0]> 0 ? total+=existScores[0]: total ;
+    // frames 리스트를 순회하여 스트라이크와 스페어 개수를 세기
+    for (var frame in frames) {
+      if (frame[0] == 'X' || frame[1]=='X'|| frame[2]=='X') {
+        strikeCount++;
+      }
+      if (frame[1] == '/' || frame[2]=='/') {
+        spareCount++;
+      }
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // 왼쪽 하단 총점 프레임
+        Expanded(
+          child: Column(
+            children: [
+              buildCustomFrame("총점", total), // 총점 프레임
+            ],
+          ),
+        ),
+        // 오른쪽 하단 스페어 및 스트라이크 프레임
+        Expanded(
+          child: Row(
+            children: [
+              buildCustomFrame("스페어",spareCount), // 스페어 프레임
+              buildCustomFrame("스트라이크",strikeCount), // 스트라이크 프레임
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  Widget buildCustomFrame(String frameLabel, int datavalue) {
+  return Container(
+    child: Column(
+      children: [
+        // 프레임 숫자를 감싸는 큰 직사각형
+        Container(
+          width: 90,
+          height: 30,
+          decoration: BoxDecoration(
+            color: Color(0xFFBBBB9D),
+            border: Border.all(color: Colors.black),
+          ),
+          child: Center(
+            child: Text(
+              frameLabel,
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+        // 큰 정사각형
+        Container(
+          width: 90,
+          height: 60,
+          decoration: BoxDecoration(
+            color: Color(0xFFFAFAD2),
+            border: Border.all(color: Colors.black),
+          ),
+          child: Center(
+            child: Text(
+              datavalue.toString(),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
