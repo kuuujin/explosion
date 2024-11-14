@@ -81,6 +81,7 @@ class _EditScoreState extends State<EditScore> {
     }
 
     print("최종 점수: $totalScore"); // 최종 점수 출력
+    print("리스트 내용${frames}");
     return totalScore; // 최종 점수 반환
   }
 
@@ -91,8 +92,13 @@ class _EditScoreState extends State<EditScore> {
       if (score == 'X') {
         return 10; // 스트라이크
       } else if (frameIndex == 10 && score == '/') {
-        return 10;
-      } else if (score == '/') {
+        return 10 - _getScoreForRoll(9, 1);
+      } else if (frameIndex==10 && (10 - _getScoreForRoll(9, 2)).toString() == frames[9][2] ){
+        print('asdf');
+        return 10 - _getScoreForRoll(9, 2);
+      } 
+      else if (score == '/') {
+        print('123');
         return 10 - _getScoreForRoll(frameIndex, 0); // 스페어는 첫 번째 투구 점수로 계산
       } else if (score.isNotEmpty) {
         return int.parse(score); // 점수 반환
@@ -182,7 +188,10 @@ class _EditScoreState extends State<EditScore> {
           thirdRollScore = value;
           int totalPins = secondRollScore + thirdRollScore;
 
-          if (totalPins == 10) {
+          if (firstRollScore == 10 && totalPins == 10) {
+            frames[9][2] = '/';
+            print(int.parse(frames[9][2]));
+          } else {
             frames[9][2] = value.toString();
           }
           isGameFinished = true; // 세 번째 투구 후 게임 종료
@@ -253,8 +262,6 @@ class _EditScoreState extends State<EditScore> {
           frames[currentFrame][0] = ""; // 첫 번째 롤 비우기
           isFirstRoll = true; // 첫 번째 롤로 돌아감
         } else {
-
-
           currentFrame--; // 이전 프레임으로 이동
           frames[currentFrame][1] = ""; // 이전 프레임의 두 번째 롤 비우기
           isFirstRoll = false; // 두 번째 롤로 전환
