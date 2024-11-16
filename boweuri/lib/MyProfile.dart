@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'LoginScreen.dart'; // LoginScreen을 import 해야 합니다.
+import 'EditProfile.dart';
 
 class UserProfileService {
-  final String baseUrl = 'http://34.64.176.207:5000'; // Flask 서버 주소
+  final String baseUrl = 'http://34.64.176.207:5000';
 
   Future<Map<String, dynamic>?> getUserProfile(String userId) async {
     final response = await http.get(Uri.parse('$baseUrl/users/$userId'));
@@ -11,16 +13,27 @@ class UserProfileService {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      // 오류 처리
       print('Error: ${response.statusCode}');
       return null;
     }
+  }
+  Future<bool> deleteUser(String userId) async {
+    final response = await http.delete(Uri.parse('$baseUrl/users/${userId}'));
+
+    return response.statusCode == 200;
+  }
+
+  Future<bool> logoutUser() async {
+    // 로그아웃 로직을 서버에서 처리하는 경우
+    // 예: 세션 종료 요청 등
+    // 현재 구현이 없다면 true를 반환하도록 설정
+    return true;
   }
 }
 
 
 class MyProfile extends StatefulWidget {
-  final String user_id; // user_id를 String형으로 지정
+  final String user_id;
 
   MyProfile({required this.user_id});
   
@@ -29,16 +42,17 @@ class MyProfile extends StatefulWidget {
 }
 
 class _MyProfileState extends State<MyProfile> {
-  bool _isNotificationsEnabled = true; // 알림 수신 상태
-  String _userName = ''; // 사용자 이름
-  String _userEmail = ''; // 사용자 이메일
-  String _profileImageUrl = ''; // 사용자 프로필 이미지 URL
+  bool _isNotificationsEnabled = true; 
+  String _userName = ''; 
+  String _userEmail = ''; 
+  String _profileImageUrl = ''; 
 
   @override
   void initState() {
     super.initState();
     _fetchUserProfile(widget.user_id);
   }
+  
 
   Future<void> _fetchUserProfile(String userId) async {
     UserProfileService userProfileService = UserProfileService();
@@ -46,11 +60,10 @@ class _MyProfileState extends State<MyProfile> {
 
     if (userProfile != null) {
       setState(() {
-        _userName = userProfile['name']; // API 응답에서 이름 가져오기
-        _userEmail = userProfile['email']; // API 응답에서 이메일 가져오기
+        _userName = userProfile['name'];
+        _userEmail = userProfile['email'];
       });
 
-      // 프로필 이미지 별도로 요청
       _fetchProfileImage(userId);
     }
   }
@@ -60,12 +73,59 @@ class _MyProfileState extends State<MyProfile> {
     
     if (response.statusCode == 200) {
       setState(() {
-        _profileImageUrl = 'http://34.64.176.207:5000/users/$userId/image'; // 프로필 이미지 URL 설정
+        _profileImageUrl = 'http://34.64.176.207:5000/users/$userId/image';
       });
     } else {
-      // 오류 처리
       print('Error fetching profile image: ${response.statusCode}');
     }
+  }
+
+  void _showConfirmationDialog(String action) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(action == 'logout' ? '로그아웃 확인' : '탈퇴 확인'),
+          content: Text(action == 'logout' 
+            ? '로그아웃 하시겠습니까?' 
+            : '정말 탈퇴하시겠습니까?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('취소'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('확인'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                if (action == 'logout') {
+                  bool success = await UserProfileService().logoutUser();
+                  if (success) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  }
+                } else {
+                  bool success = await UserProfileService().deleteUser(widget.user_id);
+                  if (success) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  } else {
+                    // 오류 처리
+                    print('탈퇴 실패');
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -75,78 +135,85 @@ class _MyProfileState extends State<MyProfile> {
       appBar: AppBar(
         title: Text('프로필'),
         foregroundColor: Colors.white,
-        backgroundColor: Color.fromARGB(255, 252, 36, 90), // 상단 바 색상
+        backgroundColor: Color.fromARGB(255, 252, 36, 90),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 프로필 이미지 및 이름
             Center(
               child: Column(
                 children: [
                   CircleAvatar(
-                  radius: 40, // 프로필 이미지 크기
-                  backgroundImage: _profileImageUrl.isNotEmpty
-                      ? NetworkImage(_profileImageUrl) // 서버에서 가져온 이미지
-                      : null, // 이미지가 없을 경우 null 설정
-                ),
-                // 아이콘이 필요할 경우 Stack 사용
-                if (_profileImageUrl.isEmpty) // 이미지가 없을 때 아이콘 표시
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.grey[300], // 아이콘 배경색
-                    ),
-                    child: Icon(Icons.account_circle, size: 40, color: Colors.black), // 기본 아이콘
+                    radius: 40,
+                    backgroundImage: _profileImageUrl.isNotEmpty
+                        ? NetworkImage(_profileImageUrl)
+                        : null,
                   ),
+                  if (_profileImageUrl.isEmpty)
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey[300],
+                      ),
+                      child: Icon(Icons.account_circle, size: 40, color: Colors.black),
+                    ),
                   SizedBox(height: 8),
                   Text(
-                    _userName, // 동적으로 변경된 이름
+                    _userName,
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    _userEmail, // 동적으로 변경된 이메일
+                    _userEmail,
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
             ),
             SizedBox(height: 20),
-
-            // 알림 수신 스위치
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('알림 수신', style: TextStyle(fontSize: 18)),
                 Switch(
-                  value: _isNotificationsEnabled, // 현재 스위치 상태
-                  activeColor: Color.fromARGB(255, 252, 36, 90), // 스위치가 켜졌을 때 색상
+                  value: _isNotificationsEnabled,
+                  activeColor: Color.fromARGB(255, 252, 36, 90),
                   activeTrackColor: Colors.grey[100],
-                  inactiveThumbColor: Colors.grey, // 스위치가 꺼졌을 때 Thumb 색상
-                  inactiveTrackColor: Colors.grey[300], // 스위치가 꺼졌을 때 Track 색상
+                  inactiveThumbColor: Colors.grey,
+                  inactiveTrackColor: Colors.grey[300],
                   onChanged: (value) {
                     setState(() {
-                      _isNotificationsEnabled = value; // 스위치 상태 변경
+                      _isNotificationsEnabled = value;
                     });
                   },
                 ),
               ],
             ),
             SizedBox(height: 20),
-
-            // 리스트 항목
             Expanded(
               child: ListView(
                 children: [
-                  _buildListItem('프로필 편집', context),
-                  _buildListItem('공지사항', context),
-                  _buildListItem('고객센터', context),
-                  _buildListItem('탈퇴하기', context),
-                  _buildListItem('로그아웃', context),
+                  _buildListItem('프로필 편집', context, () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EditProfile(user_id: widget.user_id)),
+                    );
+                  }),
+                  _buildListItem('공지사항', context, () {
+                    // 공지사항 페이지 이동 로직 추가
+                  }),
+                  _buildListItem('고객센터', context, () {
+                    // 고객센터 페이지 이동 로직 추가
+                  }),
+                  _buildListItem('탈퇴하기', context, () {
+                    _showConfirmationDialog('delete');
+                  }),
+                  _buildListItem('로그아웃', context, () {
+                    _showConfirmationDialog('logout');
+                  }),
                 ],
               ),
             ),
@@ -156,14 +223,11 @@ class _MyProfileState extends State<MyProfile> {
     );
   }
 
-  Widget _buildListItem(String title, BuildContext context) {
+  Widget _buildListItem(String title, BuildContext context, VoidCallback onTap) {
     return ListTile(
       title: Text(title),
       trailing: Icon(Icons.arrow_forward_ios),
-      onTap: () {
-        // 항목 클릭 시 행동 처리
-        // 예를 들어 다른 화면으로 전환할 수 있습니다.
-      },
+      onTap: onTap,
     );
   }
 }
