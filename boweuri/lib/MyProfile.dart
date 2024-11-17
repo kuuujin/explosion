@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'LoginScreen.dart'; // LoginScreen을 import 해야 합니다.
+import 'LoginScreen.dart';
 import 'EditProfile.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class UserProfileService {
   final String baseUrl = 'http://34.64.176.207:5000';
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
 
   Future<Map<String, dynamic>?> getUserProfile(String userId) async {
     final response = await http.get(Uri.parse('$baseUrl/users/$userId'));
@@ -17,17 +19,25 @@ class UserProfileService {
       return null;
     }
   }
+   Future<bool> logoutUser() async {
+    // 로그아웃 로직을 서버에서 처리하는 경우
+    // 세션 종료 요청 등
+    // ID와 비밀번호 삭제
+    await _storage.delete(key: 'login_id');
+    await _storage.delete(key: 'password');
+    return true;
+  }
+
   Future<bool> deleteUser(String userId) async {
     final response = await http.delete(Uri.parse('$baseUrl/users/${userId}'));
 
-    return response.statusCode == 200;
-  }
-
-  Future<bool> logoutUser() async {
-    // 로그아웃 로직을 서버에서 처리하는 경우
-    // 예: 세션 종료 요청 등
-    // 현재 구현이 없다면 true를 반환하도록 설정
-    return true;
+    if (response.statusCode == 200) {
+      // 사용자 삭제 후 ID와 비밀번호 삭제
+      await _storage.delete(key: 'login_id');
+      await _storage.delete(key: 'password');
+      return true;
+    }
+    return false;
   }
 }
 
@@ -81,52 +91,60 @@ class _MyProfileState extends State<MyProfile> {
   }
 
   void _showConfirmationDialog(String action) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(action == 'logout' ? '로그아웃 확인' : '탈퇴 확인'),
-          content: Text(action == 'logout' 
-            ? '로그아웃 하시겠습니까?' 
-            : '정말 탈퇴하시겠습니까?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('취소'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('확인'),
-              onPressed: () async {
-                Navigator.of(context).pop();
-                if (action == 'logout') {
-                  bool success = await UserProfileService().logoutUser();
-                  if (success) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
-                    );
-                  }
-                } else {
-                  bool success = await UserProfileService().deleteUser(widget.user_id);
-                  if (success) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
-                    );
-                  } else {
-                    // 오류 처리
-                    print('탈퇴 실패');
-                  }
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(action == 'logout' ? '로그아웃 확인' : '탈퇴 확인'),
+        content: Text(action == 'logout' 
+          ? '로그아웃 하시겠습니까?' 
+          : '정말 탈퇴하시겠습니까?'),
+        actions: <Widget>[
+          TextButton(
+            child: Text('취소'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('확인'),
+            onPressed: () async {
+              Navigator.of(context).pop();
+              if (action == 'logout') {
+                bool success = await UserProfileService().logoutUser();
+                if (success) {
+                  // 로그아웃 후 확인 메시지
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('로그아웃되었습니다.'))
+                  );
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
                 }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+              } else {
+                bool success = await UserProfileService().deleteUser(widget.user_id);
+                if (success) {
+                  // 탈퇴 후 확인 메시지
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('계정이 삭제되었습니다.'))
+                  );
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
+                } else {
+                  // 오류 처리
+                  print('탈퇴 실패');
+                }
+              }
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
