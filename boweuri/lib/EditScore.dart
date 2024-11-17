@@ -1,4 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> saveGameData(int userId, DateTime gameDate, int gameNum, int totalScore, String memo, double pay, List<Map<String, dynamic>> frameDetails) async {
+  // 서버 API URL
+  final String apiUrl = 'http://34.64.176.207:5000/saveGame'; // 실제 API URL로 변경하세요.
+
+  // 게임 데이터
+  final gameData = {
+    'user_id': userId,
+    'game_date': gameDate.toIso8601String().split('T').first, // YYYY-MM-DD 형식
+    'game_num': gameNum, // 게임 번호
+    'total_score': totalScore,
+    'memo': memo, // 메모
+    'pay': pay, // 손익
+  };
+
+  // 게임 저장 요청
+  final response = await http.post(
+    Uri.parse(apiUrl),
+    headers: {'Content-Type': 'application/json'},
+    body: json.encode(gameData),
+  );
+
+  if (response.statusCode == 200) {
+    // 게임이 성공적으로 저장됨
+    final responseData = json.decode(response.body);
+    int gameId = responseData['game_id']; // 저장된 게임 ID 가져오기
+
+    // 게임 세부 정보 저장 요청
+    await saveGameDetails(gameId, frameDetails);
+  } else {
+    // 에러 처리
+    throw Exception('게임 저장 실패: ${response.body}');
+  }
+}
+
+Future<void> saveGameDetails(int gameId, List<Map<String, dynamic>> frameDetails) async {
+  final String apiUrl = 'http://34.64.176.207:5000/saveGameDetails';
+
+  // 모든 프레임 정보를 묶기
+  List<Map<String, dynamic>> detailsToSend = frameDetails.map((detail) {
+    String status;
+    if (detail['first_ball'] == 10) {
+      status = 'strike';
+    } else if (detail['first_ball'] + (detail['second_ball'] ?? 0) == 10) {
+      status = 'spare';
+    } else {
+      status = 'open';
+    }
+
+    return {
+      'frame_num': detail['frame_num'],
+      'first_ball': detail['first_ball'],
+      'second_ball': detail['second_ball'] ?? 0,
+      'bonus': detail['bonus'],
+      'status': status,
+    };
+  }).toList();
+
+  // 서버에 한 번의 요청으로 모든 프레임 정보 보내기
+  final response = await http.post(
+    Uri.parse(apiUrl),
+    headers: {'Content-Type': 'application/json'},
+    body: json.encode({'game_id': gameId, 'details': detailsToSend}),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('게임 세부 정보 저장 실패: ${response.body}');
+  }
+}
 
 class EditScore extends StatefulWidget {
   final String user_id;
@@ -23,12 +94,14 @@ class _EditScoreState extends State<EditScore> {
   bool isSecondRoll = false;
   bool isThirdRollAllowed = false;
   bool isGameFinished = false;
+  String memo = '';
+  double pay = 0.0;
 
   void _showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message)),
+  );
+}
 
   void _showResetDialog() {
     showDialog(
@@ -385,19 +458,36 @@ class _EditScoreState extends State<EditScore> {
                   ),
                 ],
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 20),
 
-              // 점수 입력 필드
-              Text('메모를 입력해주세요 (50자)', style: TextStyle(fontSize: 14)),
-              TextField(
-                maxLength: 50,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: '메모 입력',
-                ),
+               // 손익 기록 입력 필드
+            Text('손익 기록', style: TextStyle(fontSize: 14)),
+            TextField(
+              maxLength: 20,
+              onChanged: (value) {
+                pay = double.tryParse(value) ?? 0.0; // 손익 저장
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'ex) 15000, -20000',
               ),
-              SizedBox(height: 30),
+            ),
+            SizedBox(height: 30),
 
+
+              // 메모 입력 필드
+            Text('메모를 입력해주세요 (50자)', style: TextStyle(fontSize: 14)),
+            TextField(
+              maxLength: 50,
+              onChanged: (value) {
+                memo = value; // 메모 저장
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: '메모 입력',
+              ),
+            ),
+            SizedBox(height: 30),
               // 점수 버튼
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -449,21 +539,68 @@ class _EditScoreState extends State<EditScore> {
               SizedBox(height: 40),
               // 점수 기록하기 버튼
               ElevatedButton(
-                onPressed: () {
-                  // '점수 기록하기' 버튼 클릭 시 처리
-                  _calculateScore(); // 점수 계산 실행
-                  // 추가적인 점수 기록 처리 로직을 여기에 추가
-                },
-                child: Text('점수 기록하기'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.pink,
-                  fixedSize: Size(500, 40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
+  onPressed: isGameFinished ? () async {
+    int userId = int.parse(widget.user_id);
+    int totalScore = _calculateScore();
+    List<Map<String, dynamic>> frameDetails = List.generate(10, (index) {
+      int firstBall = 0;
+      int secondBall = 0;
+      int bonus = 0;
+
+      // 첫 번째 투구 처리
+      if (frames[index][0] == 'X') {
+        firstBall = 10; // 스트라이크
+      } else if (frames[index][0].isNotEmpty) {
+        firstBall = int.tryParse(frames[index][0]) ?? 0; // 숫자로 변환
+      }
+
+      // 두 번째 투구 처리
+      if (frames[index][1] == '/') {
+        secondBall = 10 - firstBall; // 스페어 처리
+      } else if (frames[index][1].isNotEmpty) {
+        secondBall = int.tryParse(frames[index][1]) ?? 0; // 숫자로 변환
+      }
+
+      // 10번째 프레임의 보너스 처리
+      if (index == 9) {
+        if (frames[index][0] == 'X' && frames[index][1] == 'X') {
+          bonus = int.tryParse(frames[index][2]) ?? 0;
+        } else if (frames[index][0] == 'X' && frames[index][1].isNotEmpty) {
+          secondBall = int.tryParse(frames[index][1]) ?? 0;
+          bonus = 10 - secondBall; // 두 번째 투구 점수
+        } else if (frames[index][1] == '/') {
+          bonus = int.tryParse(frames[index][2]) ?? 0; 
+        } else {
+          bonus = int.tryParse(frames[index][2]) ?? 0;
+        }
+      }
+
+      return {
+        'frame_num': index + 1,
+        'first_ball': firstBall,
+        'second_ball': secondBall,
+        'bonus': bonus,
+      };
+    });
+
+    try {
+      // 데이터 저장 호출
+      await saveGameData(userId, selectedDate, selectedGameNumber, totalScore, memo, pay, frameDetails);
+      _showSnackbar("게임 기록이 저장되었습니다.");
+    } catch (error) {
+      _showSnackbar("저장 중 오류가 발생했습니다: $error");
+    }
+  } : null, // isGameFinished가 false일 경우 null로 설정하여 버튼 비활성화
+  child: Text('점수 기록하기'),
+  style: ElevatedButton.styleFrom(
+    foregroundColor: Colors.white,
+    backgroundColor: Colors.pink,
+    fixedSize: Size(500, 40),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+    ),
+  ),
+),
             ],
           ),
         ),
@@ -643,44 +780,42 @@ class _EditScoreState extends State<EditScore> {
     );
   }
   Widget buildCustomFrames() {
-    int strikeCount = 0; // 스트라이크 개수
-    int spareCount = 0; // 스페어 개수
-    int total = frameScores.sublist(0, 10).reduce((a, b) => a + b);
-    total = existScores[0]> 0 ? total+=existScores[0]: total ;
-    // frames 리스트를 순회하여 스트라이크와 스페어 개수를 세기
-    for (var frame in frames) {
-      if (frame[0] == 'X' || frame[1]=='X'|| frame[2]=='X') {
-        strikeCount++;
-      }
-      if (frame[1] == '/' || frame[2]=='/') {
-        spareCount++;
-      }
-    }
+  int strikeCount = 0; // 스트라이크 개수
+  int spareCount = 0; // 스페어 개수
+  int total = frameScores.sublist(0, 10).reduce((a, b) => a + b);
+  total = existScores[0] > 0 ? total += existScores[0] : total;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // 왼쪽 하단 총점 프레임
-        Expanded(
-          child: Column(
-            children: [
-              buildCustomFrame("총점", total), // 총점 프레임
-            ],
-          ),
-        ),
-        // 오른쪽 하단 스페어 및 스트라이크 프레임
-        Expanded(
-          child: Row(
-            children: [
-              buildCustomFrame("스페어",spareCount), // 스페어 프레임
-              buildCustomFrame("스트라이크",strikeCount), // 스트라이크 프레임
-            ],
-          ),
-        ),
-      ],
-    );
+  // frames 리스트를 순회하여 스트라이크와 스페어 개수를 세기
+  for (var frame in frames) {
+    if (frame[0] == 'X' || frame[1] == 'X' || frame[2] == 'X') {
+      strikeCount++;
+    }
+    if (frame[1] == '/' || frame[2] == '/') {
+      spareCount++;
+    }
   }
 
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.start, // 왼쪽 정렬
+    children: [
+      // 왼쪽 하단 총점 프레임
+      Column(
+        children: [
+          buildCustomFrame("총점", total), // 총점 프레임
+        ],
+      ),
+      SizedBox(width: 20), // 프레임 간의 간격 추가
+      // 오른쪽 하단 스페어 및 스트라이크 프레임
+      Row(
+        children: [
+          buildCustomFrame("스페어", spareCount), // 스페어 프레임
+          SizedBox(width: 20), // 프레임 간의 간격 추가
+          buildCustomFrame("스트라이크", strikeCount), // 스트라이크 프레임
+        ],
+      ),
+    ],
+  );
+}
 
   Widget buildCustomFrame(String frameLabel, int datavalue) {
   return Container(
@@ -710,7 +845,12 @@ class _EditScoreState extends State<EditScore> {
           height: 60,
           decoration: BoxDecoration(
             color: Color(0xFFFAFAD2),
-            border: Border.all(color: Colors.black),
+            border: Border(
+                left: BorderSide(color: Colors.black),
+                right: BorderSide(color: Colors.black),
+                top: BorderSide(color: Colors.transparent),
+                bottom: BorderSide(color: Colors.black),
+              ),
           ),
           child: Center(
             child: Text(
