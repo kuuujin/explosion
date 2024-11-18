@@ -34,14 +34,16 @@ class _MeetingState extends State<Meeting> {
       final joinedMeetings = json.decode(joinedResponse.body) ?? [];
       final upcomingMeetings = json.decode(upcomingResponse.body) ?? [];
 
-      // 주최자가 만든 정모를 참여 신청 정모에서 제외
-      final filteredJoinedMeetings = joinedMeetings.where((meeting) {
-        return meeting['role'] != 'Host'; // Host 제외
+      _joinedMeetings = joinedMeetings;
+
+      // 진행 예정인 정모에서 이미 참여한 정모를 제외
+      final filteredUpcomingMeetings = upcomingMeetings.where((meeting) {
+        return !joinedMeetings.any((joinedMeeting) =>
+            joinedMeeting['meet_id'] == meeting['meet_id']);
       }).toList();
 
       setState(() {
-        _joinedMeetings = filteredJoinedMeetings;
-        _upcomingMeetings = upcomingMeetings;
+        _upcomingMeetings = filteredUpcomingMeetings;
       });
     } else {
       setState(() {
@@ -59,6 +61,11 @@ class _MeetingState extends State<Meeting> {
     );
 
     if (response.statusCode == 201) {
+      final meetingId = json.decode(response.body)['meet_id'];
+
+      // 주최자가 자동으로 참여 (role: 'Host'로 설정)
+      await _joinMeeting(meetingId, 'Host'); // 주최자는 Host로 설정
+
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('정모가 생성되었습니다.')));
     } else {
@@ -84,11 +91,15 @@ class _MeetingState extends State<Meeting> {
     }
   }
 
-  Future<void> _joinMeeting(String meetingId) async {
+  Future<void> _joinMeeting(String meetingId, [String role = 'Attendee']) async {
     final response = await http.post(
       Uri.parse('http://34.64.176.207:5000/join_meeting'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({'user_id': widget.user_id, 'meet_id': meetingId}),
+      body: json.encode({
+        'user_id': widget.user_id,
+        'meet_id': meetingId,
+        'role': role // 역할을 Attendee 또는 Host로 설정
+      }),
     );
 
     if (response.statusCode == 200) {
@@ -219,21 +230,18 @@ class _MeetingState extends State<Meeting> {
                             style: TextStyle(fontSize: 25, color: Colors.grey))
                         : Column(
                             children: _upcomingMeetings.map((meeting) {
-                              bool isHost = meeting['role'] == 'Host'; // role을 사용하여 주최자 확인
                               return _buildMeetingCard(
                                 user_id: '${meeting['user_id']}',
                                 title: meeting['title'],
                                 date: formatDate(meeting['date'], meeting['time']),
-                                status: isHost ? '주최자' : '참여', // 주최자일 경우 표시
+                                status: '참여', // 주최자와 관계없이 '참여'로 표시
                                 pay: meeting['pay'],
                                 place: meeting['place'],
-                                                                total: '${meeting['join_cnt']}/${meeting['total']} (${meeting['total'] - meeting['join_cnt']}자리 남음)',
+                                total: '${meeting['join_cnt']}/${meeting['total']} (${meeting['total'] - meeting['join_cnt']}자리 남음)',
                                 images: meeting['image'],
                                 meetingId: '${meeting['meet_id']}',
-                                onJoin: isHost ? null : () => _showJoinConfirmation('${meeting['meet_id']}'), // 주최자는 참여할 수 없음
-                                onCancel: () {
-                                  _showCancelConfirmation('${meeting['meet_id']}', isHost);
-                                },
+                                onJoin: () => _showJoinConfirmation('${meeting['meet_id']}'), // 참여 신청
+                                onCancel: null, // 진행 예정인 정모에서는 신청 취소 기능 없음
                               );
                             }).toList(),
                           ),
@@ -290,7 +298,7 @@ class _MeetingState extends State<Meeting> {
             ),
             TextButton(
               onPressed: () {
-                _joinMeeting(meetingId);
+                _joinMeeting(meetingId); // role은 기본적으로 Attendee로 설정
                 Navigator.of(context).pop();
               },
               child: Text('확인'),
@@ -331,8 +339,7 @@ class _MeetingState extends State<Meeting> {
                 Navigator.of(context).pop();
               },
               child: Text('확인'),
-            )
-            
+            ),
           ],
         );
       },
@@ -422,4 +429,3 @@ class _MeetingState extends State<Meeting> {
     );
   }
 }
-
