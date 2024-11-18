@@ -4,8 +4,6 @@ import 'dart:convert';
 import 'addMeeting.dart';
 import 'package:intl/intl.dart';
 
-
-
 class Meeting extends StatefulWidget {
   final String user_id;
 
@@ -19,29 +17,71 @@ class _MeetingState extends State<Meeting> {
   List<dynamic> _joinedMeetings = []; // 참여 신청한 정모 리스트
   List<dynamic> _upcomingMeetings = []; // 진행 예정인 정모 리스트
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchMeetings();
+@override
+void initState() {
+  super.initState();
+  _fetchMeetings();
+}
+
+Future<void> _fetchMeetings() async {
+  final joinedResponse = await http.get(Uri.parse(
+      'http://34.64.176.207:5000/joined_meetings?user_id=${widget.user_id}'));
+  final upcomingResponse = await http
+      .get(Uri.parse('http://34.64.176.207:5000/upcoming_meetings'));
+
+  if (joinedResponse.statusCode == 200 &&
+      upcomingResponse.statusCode == 200) {
+    final joinedMeetings = json.decode(joinedResponse.body) ?? [];
+    final upcomingMeetings = json.decode(upcomingResponse.body) ?? [];
+
+    // 주최자가 만든 정모를 참여 신청 정모에서 제외
+    final filteredJoinedMeetings = joinedMeetings.where((meeting) {
+      return meeting['user_id'] != widget.user_id; // 주최자 자신 제외
+    }).toList();
+
+    setState(() {
+      _joinedMeetings = filteredJoinedMeetings;
+      _upcomingMeetings = upcomingMeetings;
+    });
+  } else {
+    setState(() {
+      _joinedMeetings = [];
+      _upcomingMeetings = [];
+    });
   }
+}
 
-  Future<void> _fetchMeetings() async {
-    final joinedResponse = await http.get(Uri.parse(
-        'http://34.64.176.207:5000/joined_meetings?user_id=${widget.user_id}'));
-    final upcomingResponse = await http
-        .get(Uri.parse('http://34.64.176.207:5000/upcoming_meetings'));
+Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
+  final response = await http.post(
+    Uri.parse('http://34.64.176.207:5000/meeting/create'),
+    headers: {'Content-Type': 'application/json'},
+    body: json.encode(meetingData),
+  );
 
-    if (joinedResponse.statusCode == 200 &&
-        upcomingResponse.statusCode == 200) {
-      setState(() {
-        _joinedMeetings = json.decode(joinedResponse.body) ?? [];
-        _upcomingMeetings = json.decode(upcomingResponse.body) ?? [];
-      });
+  if (response.statusCode == 201) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('정모가 생성되었습니다.')));
+  } else {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('정모 생성에 실패했습니다.')));
+  }
+}
+
+
+  Future<void> _deleteMeeting(String meetingId) async {
+    final response = await http.post(
+      Uri.parse('http://34.64.176.207:5000/delete_meeting'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'user_id': widget.user_id, 'meet_id': meetingId}),
+    );
+
+    if (response.statusCode == 200) {
+      _fetchMeetings(); // 정모 리스트를 새로고침
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('정모가 삭제되었습니다.')));
     } else {
-      setState(() {
-        _joinedMeetings = [];
-        _upcomingMeetings = [];
-      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('정모 삭제에 실패했습니다.')));
     }
   }
 
@@ -79,155 +119,155 @@ class _MeetingState extends State<Meeting> {
     }
   }
 
-   String formatDate(String dateString, String timeString) {
-  DateTime dateTime = DateTime.parse(dateString);
+  String formatDate(String dateString, String timeString) {
+    DateTime dateTime = DateTime.parse(dateString);
 
-  List<String> timeParts = timeString.split(':');
-  int hour = int.parse(timeParts[0]);
-  int minute = int.parse(timeParts[1]);
+    List<String> timeParts = timeString.split(':');
+    int hour = int.parse(timeParts[0]);
+    int minute = int.parse(timeParts[1]);
 
-  dateTime = DateTime(dateTime.year, dateTime.month, dateTime.day, hour, minute);
+    dateTime = DateTime(dateTime.year, dateTime.month, dateTime.day, hour, minute);
 
-  // 포맷팅 (오전/오후 포함)
-  String formattedDate = DateFormat('MM/dd (E) a h:mm ', 'ko_KR').format(dateTime);
-  return formattedDate;
-}
+    // 포맷팅 (오전/오후 포함)
+    String formattedDate = DateFormat('MM/dd (E) a h:mm ', 'ko_KR').format(dateTime);
+    return formattedDate;
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 20),
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.white,
-    body: SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 20),
-
-            // 참여 신청한 정모 제목
-            Text('참여 신청한 정모',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            // 참여 신청한 정모 Container
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white, // 회색 배경색 추가
-                borderRadius: BorderRadius.circular(10), // 둥근 모서리 추가
-              ),
-              padding: const EdgeInsets.all(8.0), // 내부 여백 추가
-              constraints: BoxConstraints(
-                minWidth: double.infinity, // 최소 너비를 화면 너비로 설정
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _joinedMeetings.isEmpty
-                      ? Text('참여 신청한 정모가 없습니다.',
-                          style: TextStyle(fontSize: 20, color: Colors.grey))
-                      : Column(
-                          children: _joinedMeetings.map((meeting) {
-                            return _buildMeetingCard(
-                              title: meeting['title'],
-                              date: formatDate(meeting['date'], meeting['time']), // 날짜 포맷 수정
-                              status: '신청 취소',
-                              pay: meeting['pay'],
-                              place: meeting['place'],
-                              total: '${meeting['join_cnt']}/${meeting['total']} (${meeting['total'] - meeting['join_cnt']}자리 남음)',
-                              images: meeting['image'],
-                              meetingId: '${meeting['meet_id']}',
-                              onJoin: () {
-                                _showJoinConfirmation('${meeting['meet_id']}');
-                              },
-                              onCancel: () {
-                                _showCancelConfirmation('${meeting['meet_id']}');
-                              },
-                            );
-                          }).toList(),
-                        ),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-            Divider(
-              color: Colors.black, // 선 색상
-              thickness: 1, // 선 두께
-            ),
-            SizedBox(height: 20),
-
-            // 진행 예정인 정모 제목
-            Text('진행 예정인 정모',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            // 진행 예정인 정모 Container
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white, // 회색 배경색 추가
-                borderRadius: BorderRadius.circular(10), // 둥근 모서리 추가
-              ),
-              padding: const EdgeInsets.all(8.0), // 내부 여백 추가
-              constraints: BoxConstraints(
-                minWidth: double.infinity, // 최소 너비를 화면 너비로 설정
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _upcomingMeetings.isEmpty
-                      ? Text('진행 예정인 정모가 없습니다.',
-                          style: TextStyle(fontSize: 25, color: Colors.grey))
-                      : Column(
-                          children: _upcomingMeetings.map((meeting) {
-                            return _buildMeetingCard(
-                              title: meeting['title'],
-                              date: formatDate(meeting['date'], meeting['time']), // 날짜 포맷 수정
-                              status: '참여',
-                              pay: meeting['pay'],
-                              place: meeting['place'],
-                              total: '${meeting['join_cnt']}/${meeting['total']} (${meeting['total'] - meeting['join_cnt']}자리 남음)',
-                              images: meeting['image'],
-                              meetingId: '${meeting['meet_id']}',
-                              onJoin: () {
-                                _showJoinConfirmation('${meeting['meet_id']}');
-                              },
-                              onCancel: () {
-                                _showCancelConfirmation('${meeting['meet_id']}');
-                              },
-                            );
-                          }).toList(),
-                        ),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // 정모 입장 추가 버튼
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          AddMeeting(user_id: widget.user_id)),
-                );
-              },
-              child: Text('정모 일정 추가'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 252, 36, 90),
-                foregroundColor: Colors.white, // 버튼 색상
-                fixedSize: Size(500, 40),
-                shape: RoundedRectangleBorder(
+              // 참여 신청한 정모 제목
+              Text('참여 신청한 정모',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              SizedBox(height: 10),
+              // 참여 신청한 정모 Container
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
+                padding: const EdgeInsets.all(8.0),
+                constraints: BoxConstraints(
+                  minWidth: double.infinity,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _joinedMeetings.isEmpty
+                        ? Text('참여 신청한 정모가 없습니다.',
+                            style: TextStyle(fontSize: 20, color: Colors.grey))
+                        : Column(
+                            children: _joinedMeetings.map((meeting) {
+                              bool isHost = meeting['user_id'].toString() == widget.user_id; // 주최자 확인
+                              return _buildMeetingCard(
+                                user_id: '${meeting['user_id']}',
+                                title: meeting['title'],
+                                date: formatDate(meeting['date'], meeting['time']),
+                                status: isHost ? '정모 삭제' : '신청 취소', // 주최자일 경우
+                                pay: meeting['pay'],
+                                place: meeting['place'],
+                                total: '${meeting['join_cnt']}/${meeting['total']} (${meeting['total'] - meeting['join_cnt']}자리 남음)',
+                                images: meeting['image'],
+                                meetingId: '${meeting['meet_id']}',
+                                onJoin: () {
+                                  _showCancelConfirmation('${meeting['meet_id']}', isHost);
+                                },
+                                onCancel: () {
+                                  _showCancelConfirmation('${meeting['meet_id']}', isHost); // 주최자가 참여 취소를 하면 정모 삭제.
+                                },
+                              );
+                            }).toList(),
+                          ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: 20),
+             
+              Divider(
+                color: Colors.black,
+                thickness: 1,
+              ),
+              SizedBox(height: 20),
+
+              // 진행 예정인 정모 제목
+              Text('진행 예정인 정모',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              SizedBox(height: 10),
+              // 진행 예정인 정모 Container
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.all(8.0),
+                constraints: BoxConstraints(
+                  minWidth: double.infinity,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _upcomingMeetings.isEmpty
+                        ? Text('진행 예정인 정모가 없습니다.',
+                            style: TextStyle(fontSize: 25, color: Colors.grey))
+                        : Column(
+                            children: _upcomingMeetings.map((meeting) {
+                              bool isHost = meeting['user_id'].toString() == widget.user_id; // 주최자 확인
+                              return _buildMeetingCard(
+                                user_id: '${meeting['user_id']}',
+                                title: meeting['title'],
+                                date: formatDate(meeting['date'], meeting['time']),
+                                status: isHost ? '주최자' : '참여', // 주최자일 경우 표시
+                                pay: meeting['pay'],
+                                place: meeting['place'],
+                                total: '${meeting['join_cnt']}/${meeting['total']} (${meeting['total'] - meeting['join_cnt']}자리 남음)',
+                                images: meeting['image'],
+                                meetingId: '${meeting['meet_id']}',
+                                onJoin: isHost ? null : () => _showJoinConfirmation('${meeting['meet_id']}'), // 주최자는 참여할 수 없음
+                                onCancel: () {
+                                  _showCancelConfirmation('${meeting['meet_id']}', isHost);
+                                },
+                              );
+                            }).toList(),
+                          ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+
+              // 정모 입장 추가 버튼
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => AddMeeting(user_id: widget.user_id)),
+                  );
+                },
+                child: Text('정모 일정 추가'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 252, 36, 90),
+                  foregroundColor: Colors.white,
+                  fixedSize: Size(500, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   void _showJoinConfirmation(String? meetingId) {
     if (meetingId == null) {
@@ -262,7 +302,7 @@ Widget build(BuildContext context) {
     );
   }
 
-  void _showCancelConfirmation(String? meetingId) {
+  void _showCancelConfirmation(String? meetingId, bool isHost) {
     if (meetingId == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('정모 ID가 유효하지 않습니다.')));
@@ -273,8 +313,8 @@ Widget build(BuildContext context) {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('신청 취소'),
-          content: Text('해당 정모의 신청을 취소하시겠습니까?'),
+          title: Text(isHost ? '정모 삭제' : '신청 취소'),
+          content: Text(isHost ? '해당 정모를 삭제하시겠습니까?' : '해당 정모의 신청을 취소하시겠습니까?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -284,7 +324,11 @@ Widget build(BuildContext context) {
             ),
             TextButton(
               onPressed: () {
-                _cancelMeeting(meetingId);
+                if (isHost) {
+                  _deleteMeeting(meetingId); // 정모 삭제 함수 호출
+                } else {
+                  _cancelMeeting(meetingId); // 일반 사용자 신청 취소
+                }
                 Navigator.of(context).pop();
               },
               child: Text('확인'),
@@ -304,6 +348,7 @@ Widget build(BuildContext context) {
     required String pay,
     required String images,
     required String meetingId,
+    required String user_id,
     void Function()? onJoin,
     void Function()? onCancel,
   }) {
@@ -336,7 +381,7 @@ Widget build(BuildContext context) {
             SizedBox(height: 10),
             Row(
               children: [
-                Image.network(images, height: 100, width: 120,fit: BoxFit.cover), // 이미지 표시
+                Image.network(images, height: 100, width: 120, fit: BoxFit.cover), // 이미지 표시
                 SizedBox(width: 10),
                 Expanded(
                   child: Column(
