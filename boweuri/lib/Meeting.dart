@@ -17,56 +17,55 @@ class _MeetingState extends State<Meeting> {
   List<dynamic> _joinedMeetings = []; // 참여 신청한 정모 리스트
   List<dynamic> _upcomingMeetings = []; // 진행 예정인 정모 리스트
 
-@override
-void initState() {
-  super.initState();
-  _fetchMeetings();
-}
-
-Future<void> _fetchMeetings() async {
-  final joinedResponse = await http.get(Uri.parse(
-      'http://34.64.176.207:5000/joined_meetings?user_id=${widget.user_id}'));
-  final upcomingResponse = await http
-      .get(Uri.parse('http://34.64.176.207:5000/upcoming_meetings'));
-
-  if (joinedResponse.statusCode == 200 &&
-      upcomingResponse.statusCode == 200) {
-    final joinedMeetings = json.decode(joinedResponse.body) ?? [];
-    final upcomingMeetings = json.decode(upcomingResponse.body) ?? [];
-
-    // 주최자가 만든 정모를 참여 신청 정모에서 제외
-    final filteredJoinedMeetings = joinedMeetings.where((meeting) {
-      return meeting['user_id'] != widget.user_id; // 주최자 자신 제외
-    }).toList();
-
-    setState(() {
-      _joinedMeetings = filteredJoinedMeetings;
-      _upcomingMeetings = upcomingMeetings;
-    });
-  } else {
-    setState(() {
-      _joinedMeetings = [];
-      _upcomingMeetings = [];
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchMeetings();
   }
-}
 
-Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
-  final response = await http.post(
-    Uri.parse('http://34.64.176.207:5000/meeting/create'),
-    headers: {'Content-Type': 'application/json'},
-    body: json.encode(meetingData),
-  );
+  Future<void> _fetchMeetings() async {
+    final joinedResponse = await http.get(Uri.parse(
+        'http://34.64.176.207:5000/joined_meetings?user_id=${widget.user_id}'));
+    final upcomingResponse = await http
+        .get(Uri.parse('http://34.64.176.207:5000/upcoming_meetings'));
 
-  if (response.statusCode == 201) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('정모가 생성되었습니다.')));
-  } else {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('정모 생성에 실패했습니다.')));
+    if (joinedResponse.statusCode == 200 &&
+        upcomingResponse.statusCode == 200) {
+      final joinedMeetings = json.decode(joinedResponse.body) ?? [];
+      final upcomingMeetings = json.decode(upcomingResponse.body) ?? [];
+
+      // 주최자가 만든 정모를 참여 신청 정모에서 제외
+      final filteredJoinedMeetings = joinedMeetings.where((meeting) {
+        return meeting['role'] != 'Host'; // Host 제외
+      }).toList();
+
+      setState(() {
+        _joinedMeetings = filteredJoinedMeetings;
+        _upcomingMeetings = upcomingMeetings;
+      });
+    } else {
+      setState(() {
+        _joinedMeetings = [];
+        _upcomingMeetings = [];
+      });
+    }
   }
-}
 
+  Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
+    final response = await http.post(
+      Uri.parse('http://34.64.176.207:5000/meeting/create'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(meetingData),
+    );
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('정모가 생성되었습니다.')));
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('정모 생성에 실패했습니다.')));
+    }
+  }
 
   Future<void> _deleteMeeting(String meetingId) async {
     final response = await http.post(
@@ -167,7 +166,7 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
                             style: TextStyle(fontSize: 20, color: Colors.grey))
                         : Column(
                             children: _joinedMeetings.map((meeting) {
-                              bool isHost = meeting['user_id'].toString() == widget.user_id; // 주최자 확인
+                              bool isHost = meeting['role'] == 'Host'; // role을 사용하여 주최자 확인
                               return _buildMeetingCard(
                                 user_id: '${meeting['user_id']}',
                                 title: meeting['title'],
@@ -182,7 +181,7 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
                                   _showCancelConfirmation('${meeting['meet_id']}', isHost);
                                 },
                                 onCancel: () {
-                                  _showCancelConfirmation('${meeting['meet_id']}', isHost); // 주최자가 참여 취소를 하면 정모 삭제.
+                                  _showCancelConfirmation('${meeting['meet_id']}', isHost);
                                 },
                               );
                             }).toList(),
@@ -191,7 +190,7 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
                 ),
               ),
               SizedBox(height: 20),
-             
+
               Divider(
                 color: Colors.black,
                 thickness: 1,
@@ -220,7 +219,7 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
                             style: TextStyle(fontSize: 25, color: Colors.grey))
                         : Column(
                             children: _upcomingMeetings.map((meeting) {
-                              bool isHost = meeting['user_id'].toString() == widget.user_id; // 주최자 확인
+                              bool isHost = meeting['role'] == 'Host'; // role을 사용하여 주최자 확인
                               return _buildMeetingCard(
                                 user_id: '${meeting['user_id']}',
                                 title: meeting['title'],
@@ -228,7 +227,7 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
                                 status: isHost ? '주최자' : '참여', // 주최자일 경우 표시
                                 pay: meeting['pay'],
                                 place: meeting['place'],
-                                total: '${meeting['join_cnt']}/${meeting['total']} (${meeting['total'] - meeting['join_cnt']}자리 남음)',
+                                                                total: '${meeting['join_cnt']}/${meeting['total']} (${meeting['total'] - meeting['join_cnt']}자리 남음)',
                                 images: meeting['image'],
                                 meetingId: '${meeting['meet_id']}',
                                 onJoin: isHost ? null : () => _showJoinConfirmation('${meeting['meet_id']}'), // 주최자는 참여할 수 없음
@@ -332,7 +331,8 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
                 Navigator.of(context).pop();
               },
               child: Text('확인'),
-            ),
+            )
+            
           ],
         );
       },
@@ -422,3 +422,4 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
     );
   }
 }
+
