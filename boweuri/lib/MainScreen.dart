@@ -9,7 +9,7 @@ import 'EditProfile.dart'; // 프로필 수정 화면
 import 'MyProfile.dart'; // 프로필 화면
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'Alarm.dart';
 // void main() {
 //   runApp(MyApp());
 // }
@@ -257,24 +257,26 @@ class _MainScreenState extends State<MainScreen> {
     transitionDuration: const Duration(milliseconds: 250), // 애니메이션 시간
   );
 }
- Route _createRouteForAlarm() {
-    return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) => Alarm(),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(-1.0, 0.0); // 왼쪽에서 시작
-        const end = Offset.zero; // 원래 위치로
-        const curve = Curves.easeInOut; // 애니메이션 곡선
+Route _createRouteForAlarm() {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => AlarmScreen(), // AlarmScreen으로 변경
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(-1.0, 0.0); // 왼쪽에서 시작
+      const end = Offset.zero; // 원래 위치로
+      const curve = Curves.easeInOut; // 애니메이션 곡선
 
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var offsetAnimation = animation.drive(tween);
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      var offsetAnimation = animation.drive(tween);
 
-        return SlideTransition(
-          position: offsetAnimation,
-          child: child,
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 300), // 애니메이션 시간
-    );
-  }
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 300), // 애니메이션 시간
+  );
+}
+
+
 
 }

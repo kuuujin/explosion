@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'addMeeting.dart';
 import 'package:intl/intl.dart';
+import 'Alarm.dart';
 
 class Meeting extends StatefulWidget {
   final String user_id;
@@ -53,26 +54,42 @@ class _MeetingState extends State<Meeting> {
     }
   }
 
-  Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
-    final response = await http.post(
-      Uri.parse('http://34.64.176.207:5000/meeting/create'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(meetingData),
+Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
+  final response = await http.post(
+    Uri.parse('http://34.64.176.207:5000/meeting/create'),
+    headers: {'Content-Type': 'application/json'},
+    body: json.encode(meetingData),
+  );
+
+  if (response.statusCode == 201) {
+    final meetingId = json.decode(response.body)['meet_id'];
+
+    // 주최자가 자동으로 참여 (role: 'Host'로 설정)
+    await _joinMeeting(meetingId, 'Host');
+
+    // 알람 추가
+    DateTime meetingDateTime = DateTime.parse(meetingData['date']); // 미팅 날짜
+    meetingDateTime = DateTime(
+      meetingDateTime.year,
+      meetingDateTime.month,
+      meetingDateTime.day,
+      int.parse(meetingData['time'].split(':')[0]), // 시간
+      int.parse(meetingData['time'].split(':')[1]), // 분
     );
+    Alarm newAlarm = Alarm(title: meetingData['title'], dateTime: meetingDateTime);
+    AlarmManager.addAlarm(newAlarm); // 알람 추가
 
-    if (response.statusCode == 201) {
-      final meetingId = json.decode(response.body)['meet_id'];
-
-      // 주최자가 자동으로 참여 (role: 'Host'로 설정)
-      await _joinMeeting(meetingId, 'Host'); // 주최자는 Host로 설정
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('정모가 생성되었습니다.')));
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('정모 생성에 실패했습니다.')));
-    }
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('정모가 생성되었습니다.')));
+  } else {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('정모 생성에 실패했습니다.')));
   }
+}
+
+
+
+
 
   Future<void> _deleteMeeting(String meetingId) async {
     final response = await http.post(
