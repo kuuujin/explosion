@@ -6,6 +6,14 @@ Future<void> saveGameData(int userId, DateTime gameDate, int gameNum, int totalS
   // 서버 API URL
   final String apiUrl = 'http://34.64.176.207:5000/saveGame'; // 실제 API URL로 변경하세요.
 
+   int openCount = 0;
+  for (var detail in frameDetails) {
+    if (detail['first_ball'] != 10 && (detail['first_ball'] + (detail['second_ball'] ?? 0) != 10)) {
+      openCount++;
+    }
+  }
+  int cover = 10 - openCount;
+
   // 게임 데이터
   final gameData = {
     'user_id': userId,
@@ -14,6 +22,7 @@ Future<void> saveGameData(int userId, DateTime gameDate, int gameNum, int totalS
     'total_score': totalScore,
     'memo': memo, // 메모
     'pay': pay, // 손익
+    'cover' : cover,
   };
 
   // 게임 저장 요청
@@ -38,6 +47,7 @@ Future<void> saveGameData(int userId, DateTime gameDate, int gameNum, int totalS
 
 Future<void> saveGameDetails(int gameId, List<Map<String, dynamic>> frameDetails) async {
   final String apiUrl = 'http://34.64.176.207:5000/saveGameDetails';
+
 
   // 모든 프레임 정보를 묶기
   List<Map<String, dynamic>> detailsToSend = frameDetails.map((detail) {
