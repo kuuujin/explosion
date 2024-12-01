@@ -101,7 +101,7 @@ class _MyProfileState extends State<MyProfile> {
           : '정말 탈퇴하시겠습니까?'),
         actions: <Widget>[
           TextButton(
-            child: Text('취소'),
+            child: Text('취소', style: TextStyle(fontWeight: FontWeight.w400)),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -151,7 +151,7 @@ class _MyProfileState extends State<MyProfile> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('프로필'),
+        title: Text('프로필', style: TextStyle(fontWeight: FontWeight.w400)),
         foregroundColor: Colors.white,
         backgroundColor: Color.fromARGB(255, 252, 36, 90),
       ),
@@ -182,7 +182,7 @@ class _MyProfileState extends State<MyProfile> {
                   SizedBox(height: 8),
                   Text(
                     _userName,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                   ),
                   Text(
                     _userEmail,
@@ -195,7 +195,7 @@ class _MyProfileState extends State<MyProfile> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('알림 수신', style: TextStyle(fontSize: 18)),
+                Text('알림 수신', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400)),
                 Switch(
                   value: _isNotificationsEnabled,
                   activeColor: Color.fromARGB(255, 252, 36, 90),

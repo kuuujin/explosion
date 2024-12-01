@@ -356,7 +356,7 @@ class _AddMeetingState extends State<AddMeeting> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('정모 일정 추가'),
+        title: Text('정모 일정 추가', style:TextStyle(fontWeight: FontWeight.w400)),
         backgroundColor: Color.fromARGB(255, 252, 36, 90),
         foregroundColor: Colors.white, // 상단 바 색상
       ),
@@ -395,7 +395,7 @@ class _AddMeetingState extends State<AddMeeting> {
                         bottom: 50,
                         child: Text(
                           '배경사진을 등록해주세요',
-                          style: TextStyle(color: Colors.blue),
+                          style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w400),
                         ),
                       ),
                   ],
@@ -436,7 +436,7 @@ class _AddMeetingState extends State<AddMeeting> {
               onPressed: () {
                 _submitMeeting();
               },
-              child: Text('정모 일정 추가'),
+              child: Text('정모 일정 추가',style:TextStyle(fontWeight: FontWeight.w400)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color.fromARGB(255, 252, 36, 90), // 버튼 색상
                 foregroundColor: Colors.white,
@@ -514,7 +514,8 @@ class _AddMeetingState extends State<AddMeeting> {
                 selectedDate != null
                     ? "${selectedDate!.month}/${selectedDate!.day} (${_getWeekdayString(selectedDate!.weekday)})"
                     : hint,
-                style: TextStyle(color: selectedDate != null ? Colors.black : Colors.grey),
+                style: TextStyle(color: selectedDate != null ? Colors.black : Colors.grey, fontWeight: FontWeight.w400
+                ),
               ),
             ),
           ),
@@ -589,7 +590,7 @@ class _AddMeetingState extends State<AddMeeting> {
       SizedBox(width: 30), // 아이콘과 텍스트 사이의 간격
       Text(
         hint, // '정원(2~20명)' 텍스트
-        style: TextStyle(color: Colors.black),
+        style: TextStyle(color: Colors.black, fontWeight: FontWeight.w400),
       ),
       SizedBox(width: 100), // 텍스트와 드롭다운 사이의 간격
       Expanded(
@@ -604,11 +605,11 @@ class _AddMeetingState extends State<AddMeeting> {
           padding: EdgeInsets.symmetric(horizontal: 10),
           child: DropdownButtonFormField<int>(
             value: selectedPeople,
-            hint: Text(hint, style: TextStyle(color: Colors.grey)),
+            hint: Text(hint, style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400)),
             items: List.generate(19, (index) => index + 2).map((value) {
               return DropdownMenuItem(
                 value: value,
-                child: Text(value.toString(), style: TextStyle(color: Colors.black)),
+                child: Text(value.toString(), style: TextStyle(color: Colors.black, fontWeight: FontWeight.w400)),
               );
             }).toList(),
             onChanged: (value) {
@@ -619,7 +620,7 @@ class _AddMeetingState extends State<AddMeeting> {
             decoration: InputDecoration(
               border: InputBorder.none,
             ),
-            style: TextStyle(color: selectedPeople != null ? Colors.black : Colors.grey),
+            style: TextStyle(color: selectedPeople != null ? Colors.black : Colors.grey, fontWeight: FontWeight.w400),
           ),
         ),
       ),

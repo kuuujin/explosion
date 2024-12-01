@@ -94,7 +94,7 @@ class _MainScreenState extends State<MainScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('오늘도 보으링~', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text('오늘도 보으링~', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                         Text(todayDate, style: TextStyle(color: Colors.grey)),
                       ],
                     ),
@@ -167,7 +167,7 @@ class _MainScreenState extends State<MainScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.event_available, color: _selectedIndex == 1 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black),
-                      Text('정모', style: TextStyle(color: _selectedIndex == 1 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black)),
+                      Text('정모', style: TextStyle(fontWeight: FontWeight.w400 ,color: _selectedIndex == 1 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black)),
                     ],
                   ),
                 ),
@@ -181,7 +181,7 @@ class _MainScreenState extends State<MainScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.edit_note, color: _selectedIndex == 2 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black),
-                      Text('점수기록', style: TextStyle(color: _selectedIndex == 2 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black)),
+                      Text('점수기록', style: TextStyle(fontWeight: FontWeight.w400, color: _selectedIndex == 2 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black)),
                     ],
                   ),
                 ),
@@ -195,7 +195,7 @@ class _MainScreenState extends State<MainScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.edit_calendar, color: _selectedIndex == 3 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black),
-                      Text('내기록', style: TextStyle(color: _selectedIndex == 3 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black)),
+                      Text('내기록', style: TextStyle(fontWeight: FontWeight.w400, color: _selectedIndex == 3 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black)),
                     ],
                   ),
                 ),
@@ -209,7 +209,7 @@ class _MainScreenState extends State<MainScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.bar_chart, color: _selectedIndex == 4 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black),
-                      Text('랭킹', style: TextStyle(color: _selectedIndex == 4 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black)),
+                      Text('랭킹', style: TextStyle(fontWeight: FontWeight.w400, color: _selectedIndex == 4 ? const Color.fromARGB(255, 252, 36, 90) : Colors.black)),
                     ],
                   ),
                 ),
@@ -224,7 +224,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget _getTabContent() {
     switch (_selectedIndex) {
       case 0:
-        return Center(child: Text('홈 탭 내용', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)));
+        return Center(child: Text('홈 탭 내용', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 24)));
       case 1:
         return Meeting(user_id: widget.user_id); // 정모 탭의 내용
       case 2:
@@ -234,7 +234,7 @@ class _MainScreenState extends State<MainScreen> {
       case 4:
         return Ranking(user_id: widget.user_id); // 랭킹 탭의 내용
       default:
-        return Center(child: Text('내용 없음', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)));
+        return Center(child: Text('내용 없음', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)));
     }
   }
 

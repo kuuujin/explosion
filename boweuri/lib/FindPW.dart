@@ -428,7 +428,7 @@ class _FindPWState extends State<FindPW> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text('비밀번호 재설정'),
+        title: Text('비밀번호 재설정',style: TextStyle(fontWeight: FontWeight.w400)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -506,7 +506,7 @@ class PhoneInputGroup extends StatelessWidget {
                 onRequest(); // 인증 번호 요청
                 }
               : null,
-          child: Text('인증 번호 요청'),
+          child: Text('인증 번호 요청',style: TextStyle(fontWeight: FontWeight.w400)),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,
             foregroundColor: Colors.white,
@@ -545,7 +545,7 @@ class VerificationInputGroup extends StatelessWidget {
         SizedBox(height: 20), // 위젯 내부의 간격
         ElevatedButton(
           onPressed: onConfirm, // 인증번호 확인 시 콜백 호출
-          child: Text('인증 번호 확인'),
+          child: Text('인증 번호 확인',style: TextStyle(fontWeight: FontWeight.w400)),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,
             foregroundColor: Colors.white,
@@ -614,7 +614,7 @@ class _PasswordResetState extends State<PasswordReset> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text('비밀번호 재설정'),
+        title: Text('비밀번호 재설정',style: TextStyle(fontWeight: FontWeight.w400)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -660,7 +660,7 @@ class _PasswordResetState extends State<PasswordReset> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isButtonEnabled ? _resetPassword : null,
-              child: Text('변경'),
+              child: Text('변경',style: TextStyle(fontWeight: FontWeight.w400)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink,
                 foregroundColor: Colors.white,

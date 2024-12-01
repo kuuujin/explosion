@@ -64,11 +64,11 @@ class _LoginScreenState extends State<LoginScreen> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('로그인 실패'),
+            title: Text('로그인 실패', style: TextStyle(fontWeight: FontWeight.w400)),
             content: Text('로그인 실패: ${errorData['error']}'),
             actions: [
               TextButton(
-                child: Text('확인'),
+                child: Text('확인', style: TextStyle(fontWeight: FontWeight.w400)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -146,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     minimumSize: const Size(300, 40),
                   ),
-                  child: Text('로그인'),
+                  child: Text('로그인', style: TextStyle(fontWeight: FontWeight.w400)),
                 ),
                 const SizedBox(height: 20),
                 const SizedBox(height: 30),
@@ -163,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: const Text(
                         '아이디 찾기',
-                        style: TextStyle(fontSize: 11, color: Colors.black54),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w400, color: Colors.black54),
                       ),
                     ),
                     Container(
@@ -181,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: const Text(
                         '비밀번호 재설정',
-                        style: TextStyle(fontSize: 11, color: Colors.black54),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w400, color: Colors.black54),
                       ),
                     ),
                     Container(
@@ -199,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: const Text(
                         '회원가입',
-                        style: TextStyle(fontSize: 11, color: Colors.black54),
+                        style: TextStyle(fontSize: 11,fontWeight: FontWeight.w400, color: Colors.black54),
                       ),
                     ),
                   ],

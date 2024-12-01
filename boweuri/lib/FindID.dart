@@ -295,7 +295,7 @@ Future<void> _confirmVerification() async {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text('아이디 찾기'),
+        title: Text('아이디 찾기',style: TextStyle(fontWeight: FontWeight.w400)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -373,7 +373,7 @@ class PhoneInputGroup extends StatelessWidget {
                 onRequest(); // 인증 번호 요청
                 }
               : null,
-          child: Text('인증 번호 요청'),
+          child: Text('인증 번호 요청',style: TextStyle(fontWeight: FontWeight.w400)),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,
             foregroundColor: Colors.white,
@@ -412,7 +412,7 @@ class VerificationInputGroup extends StatelessWidget {
         SizedBox(height: 20), // 위젯 내부의 간격
         ElevatedButton(
           onPressed: onConfirm, // 인증번호 확인 시 콜백 호출
-          child: Text('인증 번호 확인'),
+          child: Text('인증 번호 확인',style: TextStyle(fontWeight: FontWeight.w400)),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.pink,
             foregroundColor: Colors.white,

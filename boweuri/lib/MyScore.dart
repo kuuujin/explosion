@@ -55,7 +55,7 @@ class MyScore extends StatefulWidget {
 
 class _MyScoreState extends State<MyScore> {
   Future<Map<String, dynamic>> fetchGameData() async {
-    final response = await http.get(Uri.parse('http://34.64.176.207:5000/get_game_data?user_id=${widget.user_id}'));
+    final response = await http.get(Uri.parse('http://34.64.176.207:5000/userdata?user_id=${widget.user_id}'));
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -135,7 +135,7 @@ class _MyScoreState extends State<MyScore> {
               Expanded(
                 child: Text(
                   '$quarterText 평균점수',
-                  style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w700),
                 ),
               ),
               Icon(FontAwesomeIcons.trophy, color: Colors.white, size: 45),
@@ -143,13 +143,13 @@ class _MyScoreState extends State<MyScore> {
           ),
           Text(
             dateRangeText,
-            style: TextStyle(fontSize: 15, color: Colors.white70, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 15, color: Colors.white70, fontWeight: FontWeight.w700),
           ),
           SizedBox(height: 20),
           Center(
             child: Text(
               data['average_score'].toStringAsFixed(1),
-              style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(fontSize: 48, fontWeight: FontWeight.w700, color: Colors.white),
             ),
           ),
           SizedBox(height: 20),
@@ -176,11 +176,11 @@ class _MyScoreState extends State<MyScore> {
       children: [
         Text(
           title,
-          style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
         ),
         Text(
           value,
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
         ),
       ],
     );
@@ -213,7 +213,7 @@ class _MyScoreState extends State<MyScore> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('분기별 평균점수 추이', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text('분기별 평균점수 추이', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
         SizedBox(height: 20),
         ScoreTrendChart(data: scoreDataList),
       ],
@@ -230,7 +230,7 @@ class _MyScoreState extends State<MyScore> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('내 게임 기록 히스토리', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text('내 게임 기록 히스토리', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
         SizedBox(height: 20),
         GameHistoryWidget(user_id: widget.user_id,
         totalScore: totalScore,
@@ -343,7 +343,7 @@ class GameHistoryWidget extends StatelessWidget {
           Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('$gameDate $gameNum번째 게임', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text('$gameDate $gameNum번째 게임', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
         ElevatedButton(
           onPressed: () {
             Navigator.push(
@@ -389,7 +389,7 @@ class GameHistoryWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(title, style: TextStyle(fontWeight: FontWeight.w700)),
           SizedBox(height: 4), // 텍스트 간격
           Text(value, style: TextStyle(fontSize: 24)),
         ],
@@ -439,7 +439,7 @@ class GameHistoryWidget extends StatelessWidget {
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
-                    fontWeight: FontWeight.bold),
+                    fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -460,7 +460,7 @@ class GameHistoryWidget extends StatelessWidget {
             child: Center(
               child: Text(
                 value,
-                style: TextStyle(fontSize: 24),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),
               ),
             ),
           ),

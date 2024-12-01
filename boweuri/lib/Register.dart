@@ -669,7 +669,7 @@ class _RegisterState extends State<Register> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text('회원가입'),
+        title: Text('회원가입', style: TextStyle(fontWeight: FontWeight.w400)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -891,7 +891,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
           content: Text(message),
           actions: [
             TextButton(
-              child: Text('중복임'),
+              child: Text('확인'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -908,7 +908,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text('회원가입 정보'),
+        title: Text('회원가입 정보', style: TextStyle(fontWeight: FontWeight.w400)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -931,7 +931,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             ),
             Text(
               '계정 정보',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             SizedBox(height: 20),
             Row(
@@ -948,7 +948,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                 SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: _checkLoginId,
-                  child: Text('중복 확인'),
+                  child: Text('중복 확인', style: TextStyle(fontWeight: FontWeight.w400)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.pink,
                     foregroundColor: Colors.white,
@@ -976,7 +976,7 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
             SizedBox(height: 20),
             Text(
               '회원 정보',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             SizedBox(height: 20),
             TextField(
@@ -1136,7 +1136,7 @@ class _ProfileSettingScreenState extends State<ProfileSettingScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text('프로필 설정'),
+        title: Text('프로필 설정',style: TextStyle(fontWeight: FontWeight.w400)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -1182,7 +1182,7 @@ class _ProfileSettingScreenState extends State<ProfileSettingScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => _registerUser(context),
-                child: Text('회원가입 하기'),
+                child: Text('회원가입 하기',style: TextStyle(fontWeight: FontWeight.w400)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink,
                   foregroundColor: Colors.white,

@@ -118,7 +118,7 @@ class _EditScoreState extends State<EditScore> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('리셋'),
+          title: Text('리셋',),
           content: Text('해당 게임 기록을 리셋하시겠습니까?'),
           actions: [
             TextButton(
@@ -427,7 +427,7 @@ class _EditScoreState extends State<EditScore> {
                           Text(
                             "${selectedDate.toLocal()}".split(' ')[0],
                             style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                                fontSize: 16, fontWeight: FontWeight.w700),
                           ),
                           Icon(Icons.calendar_today),
                         ],
@@ -455,7 +455,7 @@ class _EditScoreState extends State<EditScore> {
                               .map((int value) {
                             return DropdownMenuItem<int>(
                               value: value,
-                              child: Text(value.toString()),
+                              child: Text(value.toString(), style: TextStyle(fontWeight: FontWeight.w400)),
                             );
                           }).toList(),
                         ),
@@ -463,7 +463,7 @@ class _EditScoreState extends State<EditScore> {
                       SizedBox(width: 5),
                       Text('번째 게임',
                           style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
+                              fontSize: 16, fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ],
@@ -471,7 +471,7 @@ class _EditScoreState extends State<EditScore> {
               SizedBox(height: 20),
 
                // 손익 기록 입력 필드
-            Text('손익 기록', style: TextStyle(fontSize: 14)),
+            Text('손익 기록', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400)),
             TextField(
               maxLength: 20,
               onChanged: (value) {
@@ -486,7 +486,7 @@ class _EditScoreState extends State<EditScore> {
 
 
               // 메모 입력 필드
-            Text('메모를 입력해주세요 (50자)', style: TextStyle(fontSize: 14)),
+            Text('메모를 입력해주세요 (50자)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400)),
             TextField(
               maxLength: 50,
               onChanged: (value) {
@@ -601,7 +601,7 @@ class _EditScoreState extends State<EditScore> {
       _showSnackbar("저장 중 오류가 발생했습니다: $error");
     }
   } : null, // isGameFinished가 false일 경우 null로 설정하여 버튼 비활성화
-  child: Text('점수 기록하기'),
+  child: Text('점수 기록하기', style: TextStyle(fontWeight: FontWeight.w400)),
   style: ElevatedButton.styleFrom(
     foregroundColor: Colors.white,
     backgroundColor: Colors.pink,
@@ -629,8 +629,8 @@ class _EditScoreState extends State<EditScore> {
         child: ElevatedButton(
           onPressed: () => _onButtonPressed(value),
           child: value == 10
-              ? Text('X', style: TextStyle(fontSize: 14)) // 스트라이크
-              : Text(value.toString(), style: TextStyle(fontSize: 14)), // 점수
+              ? Text('X', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400)) // 스트라이크
+              : Text(value.toString(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400)), // 점수
           style: ElevatedButton.styleFrom(
             foregroundColor: Color.fromARGB(255, 252, 36, 90),
             backgroundColor: Colors.white,
@@ -693,7 +693,7 @@ class _EditScoreState extends State<EditScore> {
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
-                    fontWeight: FontWeight.bold),
+                    fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -724,7 +724,7 @@ class _EditScoreState extends State<EditScore> {
                       child: Text(
                         frames[frameNumber - 1][0], // 첫 번째 투구 점수
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ),
@@ -740,7 +740,7 @@ class _EditScoreState extends State<EditScore> {
                       child: Text(
                         frames[frameNumber - 1][1], // 두 번째 투구 점수
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ),
@@ -757,7 +757,7 @@ class _EditScoreState extends State<EditScore> {
                         child: Text(
                           frames[9][2], // 세 번째 투구 점수
                           style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                              fontSize: 18, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -776,7 +776,7 @@ class _EditScoreState extends State<EditScore> {
                             : '', // 프레임 점수
                         style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                             color: Colors.black),
                       ),
                     ),
@@ -845,7 +845,7 @@ class _EditScoreState extends State<EditScore> {
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
-                  fontWeight: FontWeight.bold),
+                  fontWeight: FontWeight.w700),
             ),
           ),
         ),
@@ -865,7 +865,7 @@ class _EditScoreState extends State<EditScore> {
           child: Center(
             child: Text(
               datavalue.toString(),
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
           ),
         ),

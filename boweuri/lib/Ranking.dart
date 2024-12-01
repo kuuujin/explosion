@@ -73,7 +73,7 @@ class _RankingState extends State<Ranking> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 20),
-            Text("랭킹", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text("랭킹", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
             SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
@@ -152,7 +152,7 @@ class _RankingState extends State<Ranking> {
               if (rank == 2) Icon(Icons.emoji_events, color: Colors.grey),
               if (rank == 3) Icon(Icons.emoji_events, color: const Color.fromARGB(255, 155, 98, 78)),
               SizedBox(width: 8),
-              Text('$rank. $name', style: TextStyle(fontSize: 16)),
+              Text('$rank. $name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
             ],
           ),
           Text(
@@ -161,7 +161,7 @@ class _RankingState extends State<Ranking> {
             '점수: ${score.toStringAsFixed(1)}',
             style: TextStyle(fontSize: 16),
           ),
-          Text('(참여: $count)', style: TextStyle(fontSize: 16)),
+          Text('(참여: $count)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
         ],
       ),
     );
@@ -177,7 +177,7 @@ class _RankingState extends State<Ranking> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+      child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
     );
   }
 
@@ -193,7 +193,7 @@ class _RankingState extends State<Ranking> {
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
       ),
     );
   }

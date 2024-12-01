@@ -59,35 +59,36 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
 
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
-
-  # To add assets to your application, add an assets section, like this:
   assets:
     - asset/images/보으링아이콘.png
     - asset/images/보으링로고.png
     - asset/images/1단계.png
     - asset/images/2단계.png
     - asset/images/3단계.png
-    # - images/a_dot_ham.jpeg
 
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
 
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+fonts:
+  - family: Pretendard
+    fonts:
+      - asset: fonts/Pretendard-Thin.ttf
+        weight: 100
+      - asset: fonts/Pretendard-ExtraLight.ttf
+        weight: 200
+      - asset: fonts/Pretendard-Light.ttf
+        weight: 300
+      - asset: fonts/Pretendard-Regular.ttf
+        weight: 400
+      - asset: fonts/Pretendard-Medium.ttf
+        weight: 500
+      - asset: fonts/Pretendard-SemiBold.ttf
+        weight: 600
+      - asset: fonts/Pretendard-Bold.ttf
+        weight: 700
+      - asset: fonts/Pretendard-ExtraBold.ttf
+        weight: 800
+      - asset: fonts/Pretendard-Black.ttf
+        weight: 900
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

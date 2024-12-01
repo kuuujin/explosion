@@ -174,7 +174,7 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
 
               // 참여 신청한 정모 제목
               Text('참여 신청한 정모',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               SizedBox(height: 10),
               // 참여 신청한 정모 Container
               Container(
@@ -227,7 +227,7 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
 
               // 진행 예정인 정모 제목
               Text('진행 예정인 정모',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               SizedBox(height: 10),
               // 진행 예정인 정모 Container
               Container(
@@ -244,7 +244,7 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
                   children: [
                     _upcomingMeetings.isEmpty
                         ? Text('진행 예정인 정모가 없습니다.',
-                            style: TextStyle(fontSize: 25, color: Colors.grey))
+                            style: TextStyle(fontSize: 20, color: Colors.grey))
                         : Column(
                             children: _upcomingMeetings.map((meeting) {
                               return _buildMeetingCard(
@@ -392,7 +392,7 @@ Future<void> handleCreateMeeting(Map<String, dynamic> meetingData) async {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(title,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                 ElevatedButton(
                   onPressed: status == '신청 취소' ? onCancel : onJoin,
                   style: ElevatedButton.styleFrom(
