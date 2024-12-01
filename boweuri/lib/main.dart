@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(fontFamily: 'Pretendard'),
+      theme: ThemeData(fontFamily: "Pretendard"),
       home: SplashScreen(),
     );
   }

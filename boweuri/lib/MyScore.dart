@@ -5,6 +5,11 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import 'Gamehistory.dart';
 import 'dart:convert';
 
+int getCurrentQuarter() {
+  final now = DateTime.now();
+  return (now.month - 1) ~/ 3 + 1; // 1~4 분기 계산
+}
+
 String getCurrentQuarterText() {
   final now = DateTime.now();
   final month = now.month;
@@ -90,13 +95,11 @@ class _MyScoreState extends State<MyScore> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    buildScoreCard(data, quarterText, dateRangeText),
-                    SizedBox(height: 40),
-                    buildCheckButton(),
+                    buildScoreCard(data),
                     SizedBox(height: 40),
                     buildScoreTrendChart(data),
                     SizedBox(height: 40),
-                    buildGameHistory(data, profit.toString()),
+                    buildGameHistory(data, profit.toString()),  
                   ],
                 ),
               ),
@@ -107,108 +110,111 @@ class _MyScoreState extends State<MyScore> {
     );
   }
 
-  Widget buildScoreCard(Map<String, dynamic> data, String quarterText, String dateRangeText) {
-    return Container(
-      width: 500,
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFC245A), Color(0xFFCC83BA)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  '$quarterText 평균점수',
-                  style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w700),
-                ),
-              ),
-              Icon(FontAwesomeIcons.trophy, color: Colors.white, size: 45),
-            ],
-          ),
-          Text(
-            dateRangeText,
-            style: TextStyle(fontSize: 15, color: Colors.white70, fontWeight: FontWeight.w700),
-          ),
-          SizedBox(height: 20),
-          Center(
-            child: Text(
-              data['average_score'].toStringAsFixed(1),
-              style: TextStyle(fontSize: 48, fontWeight: FontWeight.w700, color: Colors.white),
-            ),
-          ),
-          SizedBox(height: 20),
-          buildScoreDetails(data)
-        ],
-      ),
-    );
-  }
+  Widget buildScoreCard(Map<String, dynamic> data) {
+  List<Widget> scoreCards = [    buildQuarterCard(data['quarter_data']['1'] ?? {}, '1분기'),
+    buildQuarterCard(data['quarter_data']['2'] ?? {}, '2분기'),
+    buildQuarterCard(data['quarter_data']['3'] ?? {}, '3분기'),
+    buildQuarterCard(data['quarter_data']['4'] ?? {}, '4분기'),
+  ];
 
-  Widget buildScoreDetails(Map<String, dynamic> data) {
-    return Row(
-      children: [
-        buildScoreDetail('최고점수', data['max_score'].toString()),
-        Spacer(),
-        buildScoreDetail('200UP', data['count_above_200'].toString()),
-        Spacer(),
-        buildScoreDetail('커버율', '${data['cover_percentage'].toStringAsFixed(1)}%'),
-      ],
-    );
-  }
+  // 현재 분기 가져오기
+  int currentQuarter = getCurrentQuarter();
 
-  Widget buildScoreDetail(String title, String value) {
-    return Column(
-      children: [
-        Text(
-          title,
-          style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
-        ),
-        Text(
-          value,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
-        ),
-      ],
-    );
-  }
-
-  Widget buildCheckButton() {
-    return ElevatedButton(
-      onPressed: () {
-        // 버튼 클릭 시 동작 구현
+  return Container(
+    height: 250, // 카드 높이 설정
+    child: PageView.builder(
+      itemCount: scoreCards.length,
+      controller: PageController(initialPage: currentQuarter - 1), // 초기 페이지 설정
+      itemBuilder: (context, index) {
+        return scoreCards[index];
       },
-      child: Text('다른 분기 기록 확인'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.pink,
-        foregroundColor: Colors.white,
-        fixedSize: Size(500, 40),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+    ),
+  );
+}
+
+Widget buildQuarterCard(Map<String, dynamic> quarterData, String quarterText) {
+  return Container(
+    width: 500,
+    padding: EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [Color(0xFFFC245A), Color(0xFFCC83BA)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
-    );
-  }
+      borderRadius: BorderRadius.circular(15),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black26,
+          blurRadius: 10,
+          offset: Offset(0, 5),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                '$quarterText 평균점수',
+                style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w700),
+              ),
+            ),
+            Icon(FontAwesomeIcons.trophy, color: Colors.white, size: 45),
+          ],
+        ),
+        SizedBox(height: 20),
+        Center(
+          child: Text(
+            quarterData['average_score']?.toStringAsFixed(1) ?? '0.0', // Null 체크 추가
+            style: TextStyle(fontSize: 48, fontWeight: FontWeight.w700, color: Colors.white),
+          ),
+        ),
+        SizedBox(height: 20),
+        buildScoreDetails(quarterData)
+      ],
+    ),
+  );
+}
+
+Widget buildScoreDetails(Map<String, dynamic> quarterData) {
+  return Row(
+    children: [
+      buildScoreDetail('최고점수', quarterData['max_score']?.toString() ?? '0'), // Null 체크 추가
+      Spacer(),
+      buildScoreDetail('200UP', quarterData['count_above_200']?.toString() ?? '0'), // Null 체크 추가
+      Spacer(),
+      buildScoreDetail('커버율', '${quarterData['cover_percentage']?.toStringAsFixed(1) ?? '0.0'}%'), // Null 체크 추가
+    ],
+  );
+}
+
+Widget buildScoreDetail(String title, String value) {
+  return Column(
+    children: [
+      Text(
+        title,
+        style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+      ),
+      Text(
+        value,
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
+      ),
+    ],
+  );
+}
+
+
 
   Widget buildScoreTrendChart(Map<String, dynamic> data) {
     List<ScoreData> scoreDataList = [
-  ScoreData('1 분기', (data['average_scores']['1'] ?? 0).toDouble()), 
-  ScoreData('2 분기', (data['average_scores']['2'] ?? 0).toDouble()), 
-  ScoreData('3 분기', (data['average_scores']['3'] ?? 0).toDouble()), 
-  ScoreData('4 분기', (data['average_scores']['4'] ?? 0).toDouble()), 
+  ScoreData('1 분기', (data['quarter_data']['1']['average_score'] ?? 0).toDouble()), 
+    ScoreData('2 분기', (data['quarter_data']['2']['average_score'] ?? 0).toDouble()), 
+    ScoreData('3 분기', (data['quarter_data']['3']['average_score'] ?? 0).toDouble()), 
+    ScoreData('4 분기', (data['quarter_data']['4']['average_score'] ?? 0).toDouble()), 
 ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
