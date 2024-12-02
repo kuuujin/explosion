@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:typed_data';
 
 class EditProfile extends StatefulWidget {
   final String user_id;
@@ -80,6 +81,12 @@ class _EditProfileState extends State<EditProfile> {
   Future<void> _updateUserProfile() async {
     final url = 'http://34.64.176.207:5000/users/${widget.user_id}'; // 사용자 업데이트 엔드포인트
 
+
+      String? base64Image;
+      if (_image != null) {
+      Uint8List imageBytes = await _image!.readAsBytes();
+      base64Image = base64Encode(imageBytes);
+    }
     // 사용자 정보 준비
     final Map<String, dynamic> userData = {
       'name': widget.nameController.text,
@@ -87,7 +94,7 @@ class _EditProfileState extends State<EditProfile> {
       'phone_num': widget.phoneController.text,
       // 'birthdate': existingBirthdate, // 생년월일은 기존 값을 사용
       'email': widget.emailController.text,
-      // 'profile_image': ... // 프로필 이미지를 Base64로 변환하여 추가할 수 있습니다.
+      'profile_image': base64Image
     };
 
     // PUT 요청
