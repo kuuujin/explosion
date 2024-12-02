@@ -119,6 +119,7 @@ class _EditProfileState extends State<EditProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('프로필 수정'),
         backgroundColor: Color.fromARGB(255, 252, 36, 90),
