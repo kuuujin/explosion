@@ -24,30 +24,35 @@ class _RankingState extends State<Ranking> {
     fetchRankings();
   }
 
-  Future<void> fetchRankings() async {
+Future<void> fetchRankings() async {
+  setState(() {
+    isLoading = true; // 데이터 로딩 시작
+    errorMessage = ''; // 에러 메시지 초기화
+  });
+
+  String url = 'http://34.64.176.207:5000/rankings?type=$rankingType&quarter=$quarter&user_id=${widget.user_id}';
+  final response = await http.get(Uri.parse(url));
+
+  print('Response status: ${response.statusCode}'); // 상태 코드 출력
+
+  if (response.statusCode == 200) {
     setState(() {
-      isLoading = true; // 데이터 로딩 시작
-      errorMessage = ''; // 에러 메시지 초기화
+      rankings = json.decode(response.body);
+      // 사용자 프로필 이미지 URL 추가
+      for (var item in rankings) {
+        item['profile_image'] = 'http://34.64.176.207:5000/users/${item['user_id']}/image'; // 프로필 이미지 URL 생성
+      }
+      isLoading = false; // 데이터 로딩 완료
     });
-
-    String url = 'http://34.64.176.207:5000/rankings?type=$rankingType&quarter=$quarter&user_id=${widget.user_id}';
-    final response = await http.get(Uri.parse(url));
-
-    print('Response status: ${response.statusCode}'); // 상태 코드 출력
-
-    if (response.statusCode == 200) {
-      setState(() {
-        rankings = json.decode(response.body);
-        isLoading = false; // 데이터 로딩 완료
-      });
-    } else {
-      setState(() {
-        isLoading = false; // 데이터 로딩 완료
-        errorMessage = '랭킹을 불러오는 데 실패했습니다: ${response.body}'; // 에러 메시지 설정
-      });
-    }
+  } else {
+    setState(() {
+      isLoading = false; // 데이터 로딩 완료
+      errorMessage = '랭킹을 불러오는 데 실패했습니다: ${response.body}'; // 에러 메시지 설정
+    });
   }
+}
 
+  
   void updateRanking(String type) {
     setState(() {
       rankingType = type;
@@ -72,8 +77,8 @@ class _RankingState extends State<Ranking> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20),
-            Text("랭킹", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+            
+            Text("랭킹", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
@@ -123,20 +128,29 @@ class _RankingState extends State<Ranking> {
                               item['name'] ?? 'Unknown',
                               double.tryParse(item['score'].toString()) ?? 0.0,
                               item['count'] ?? 0,
-                              widget.user_id == item['user_id'].toString(), // 현재 사용자 확인
+                              widget.user_id == item['user_id'].toString(),
+                              item['profile_image'] ?? '' // 현재 사용자 확인
                             );
+                            
                           },
+                          
                         ),
+                        
             ),
+          
           ],
+          
         ),
+        
       ),
+      
     );
+    
   }
-
-  Widget rankingItem(int rank, String name, double score, int count, bool isCurrentUser) {
+  
+  Widget rankingItem(int rank, String name, double score, int count, bool isCurrentUser,String profileImage) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 4),
+      margin: EdgeInsets.symmetric(vertical: 10),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isCurrentUser ? Colors.lightBlue[100] : Colors.white, // 현재 사용자일 경우 색상 변경
@@ -148,20 +162,28 @@ class _RankingState extends State<Ranking> {
         children: [
           Row(
             children: [
-              if (rank == 1) Icon(Icons.emoji_events, color: Colors.orange),
-              if (rank == 2) Icon(Icons.emoji_events, color: Colors.grey),
-              if (rank == 3) Icon(Icons.emoji_events, color: const Color.fromARGB(255, 155, 98, 78)),
-              SizedBox(width: 8),
-              Text('$rank. $name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+              if (rank == 1) Icon(Icons.emoji_events, color: Colors.orange,size: 35),
+              if (rank == 2) Icon(Icons.emoji_events, color: Colors.grey,size: 35),
+              if (rank == 3) Icon(Icons.emoji_events, color: const Color.fromARGB(255, 155, 98, 78),size: 35),
+              if (rank != 1 && rank !=2 && rank !=3) Text('$rank',style: TextStyle(fontSize:30 , fontWeight: FontWeight.bold)),
+              SizedBox(width: 20),
             ],
           ),
+          SizedBox(width: 30),
+            CircleAvatar(
+              backgroundImage: NetworkImage(profileImage), // 프로필 이미지 URL
+              radius: 20, // 반지름
+              backgroundColor: Colors.white,
+            ),
+          Text('$name', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
+          SizedBox(width: 10),
           Text(
-            rankingType == 'cost' ? '손익: ${score.toStringAsFixed(1)}원' : 
-            rankingType == 'cover' ? '커버율: ${score.toStringAsFixed(1)}%' : 
-            '점수: ${score.toStringAsFixed(1)}',
-            style: TextStyle(fontSize: 16),
+            rankingType == 'cost' ? '${score.toStringAsFixed(1)}원' : 
+            rankingType == 'cover' ? '${score.toStringAsFixed(1)}%' : 
+            '${score.toStringAsFixed(1)}',
+            style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),
           ),
-          Text('(참여: $count)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+          Text('(참여: $count)', style: TextStyle(fontSize: 12)),
         ],
       ),
     );
@@ -177,7 +199,7 @@ class _RankingState extends State<Ranking> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+      child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -193,7 +215,7 @@ class _RankingState extends State<Ranking> {
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }
