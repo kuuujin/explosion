@@ -80,20 +80,21 @@ class _EditProfileState extends State<EditProfile> {
 
   Future<void> _updateUserProfile() async {
     final url = 'http://34.64.176.207:5000/users/${widget.user_id}'; // 사용자 업데이트 엔드포인트
-    String? base64Image;
-    if (_image != null) {
+
+
+      String? base64Image;
+      if (_image != null) {
       Uint8List imageBytes = await _image!.readAsBytes();
       base64Image = base64Encode(imageBytes);
     }
-
     // 사용자 정보 준비
     final Map<String, dynamic> userData = {
       'name': widget.nameController.text,
-      'login_id': widget.nicknameController.text,
+      'nickname': widget.nicknameController.text,
       'phone_num': widget.phoneController.text,
       // 'birthdate': existingBirthdate, // 생년월일은 기존 값을 사용
       'email': widget.emailController.text,
-      'profile_image': base64Image // 프로필 이미지를 Base64로 변환하여 추가할 수 있습니다.
+      'profile_image': base64Image
     };
 
     // PUT 요청
@@ -119,11 +120,8 @@ class _EditProfileState extends State<EditProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('프로필 수정'),
-        backgroundColor: Color.fromARGB(255, 252, 36, 90),
-        foregroundColor: Colors.white, // 상단 바 색상
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
